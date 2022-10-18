@@ -130,8 +130,7 @@ decoder =
 presidents : List Person
 presidents =
     case Decode.decodeCsv Decode.FieldNamesFromFirstRow decoder presidentsString of
-        Err x -> let 
-                    _ = Debug.log " " (Decode.errorToString x)
+        Err x -> let _ = Debug.log "Error when parsing input data" (Decode.errorToString x)
                  in []
         Ok x -> x
 
