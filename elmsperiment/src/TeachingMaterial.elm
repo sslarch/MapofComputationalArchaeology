@@ -1,10 +1,14 @@
 module TeachingMaterial exposing (Model, Msg(..), TeachingResource, config, init, main, teachingResources, update, view)
 
 import TeachingMaterialData exposing (teachingMaterialString)
+import MapOfComputionalArchaeology exposing (comparchmap)
 
 import Browser
 import Chart as C
 import Chart.Attributes as CA
+import Chart.Svg as CS
+import Svg as S
+import Svg.Attributes as SA
 import Html exposing (Html, div, h1, input, text, button, p)
 import Html.Attributes exposing (placeholder, style)
 import Html.Events exposing (onInput)
@@ -91,8 +95,8 @@ view { elements, testString, tableState, query } =
 
         mapPlot = 
             C.chart
-                [ CA.height 300
-                , CA.width 300
+                [ CA.height 350
+                , CA.width 700
                 ]
                 [ C.xLabels [ CA.withGrid ]
                 , C.yLabels [ CA.withGrid ]
@@ -100,10 +104,12 @@ view { elements, testString, tableState, query } =
                     [ C.scatter .y []
                     ]
                     elements
+                , C.svgAt .min .max 0 0 [ comparchmap [] ]
+
                 ]
     in
     div []
-        [ div [ style "width" "30%" ] [ mapPlot ]
+        [ div [ style "margin" "auto", style "width" "30%", style "border" "3px solid green" ] [ mapPlot ]
         , h1 [] [ text "Teaching material list" ]
         , input [ placeholder "Search by Name", onInput SetQuery ] []
         , Table.view config tableState acceptablePeople

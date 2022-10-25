@@ -1,5 +1,6 @@
 #!/bin/bash
 
+# teaching material csv to elm code
 cp data/teachingmaterial.csv src/TeachingMaterialData.elm
 prepent='module TeachingMaterialData exposing (teachingMaterialString)
 \n 
@@ -7,3 +8,7 @@ prepent='module TeachingMaterialData exposing (teachingMaterialString)
 \nteachingMaterialString = """'
 echo -en $prepent | cat - src/TeachingMaterialData.elm > temp && mv temp src/TeachingMaterialData.elm
 echo '"""' >> src/TeachingMaterialData.elm
+
+# svg mpa to elm code
+# https://github.com/pinata-llc/svg2elm
+svg2elm --module MapOfComputionalArchaeology data/comparchmap.svg > src/MapOfComputionalArchaeology.elm
