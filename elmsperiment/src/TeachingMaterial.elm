@@ -11,7 +11,7 @@ import Chart.Item as CI
 import Chart.Svg as CS
 import Svg as S
 import Svg.Attributes as SA
-import Html as H exposing (Html, div, h1, input, text, button, p)
+import Html as H exposing (Html, div, h1, input, text, button, p, br)
 import Html.Attributes as HA exposing (placeholder, style)
 import Html.Events as HE exposing (onInput)
 import Table
@@ -19,6 +19,13 @@ import Task
 import Csv.Decode as Decode exposing (Decoder)
 import List exposing (map)
 import VirtualDom exposing (attribute)
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Row as Row
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Alert as Alert
+import Bootstrap.Button as Button
+import Bootstrap.Utilities.Spacing as Spacing
 
 main =
     Browser.element
@@ -174,25 +181,30 @@ view { elements, testString, tableState, query, center, dragging, percentage } =
                 ]
                 [ C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
-                , C.xTicks [ CA.amount 10, CA.ints ]
-                , C.yTicks [ CA.amount 10, CA.ints ]
-                , C.htmlAt .max .max 0 0
+                , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                , C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ H.span
                         [ HA.style "margin-right" "5px" ]
                         [ H.text (String.fromFloat percentage ++ "%") ]
-                    , H.button
-                        [ HE.onClick OnZoomIn
-                        , HA.style "margin-right" "5px"
+                    , Button.button
+                        [ Button.attrs [ HE.onClick OnZoomIn, Spacing.ml1 ]
+                        , Button.outlineSecondary
+                        , Button.small
                         ]
                         [ H.text "+" ]
-                    , H.button
-                        [ HE.onClick OnZoomOut
-                        , HA.style "margin-right" "5px"
+                    , Button.button
+                        [ Button.attrs [ HE.onClick OnZoomOut, Spacing.ml1 ]
+                        , Button.outlineSecondary
+                        , Button.small
                         ]
                         [ H.text "-" ]
-                    , H.button
-                        [ HE.onClick OnZoomReset ]
+                    , Button.button
+                        [ Button.attrs [ HE.onClick OnZoomReset, Spacing.ml1 ]
+                        , Button.outlineSecondary
+                        , Button.small
+                        ]
                         [ H.text "⨯" ]
                     ]
 
@@ -204,12 +216,34 @@ view { elements, testString, tableState, query, center, dragging, percentage } =
                 , C.series .x [ C.scatter .y [] ] elements
                 ]
     in
-    div []
-        [ div [ style "overflow" "hidden", style "margin" "auto", style "width" "40%", style "border" "3px solid green" ] [ mapPlot ]
-        , h1 [] [ text "Teaching material list" ]
-        , input [ placeholder "Search by Name", onInput SetQuery ] []
-        , Table.view config tableState acceptablePeople
+    Grid.container [] [
+          CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+        , Grid.row [] [
+              Grid.col [ Col.sm9 ] 
+                    [ 
+                      br [] []
+                    , div [ 
+                          style "overflow" "hidden"
+                        , style "margin" "auto"
+                        , style "height" "380px"
+                        ] [ mapPlot ] 
+                    ]
+            , Grid.col [ Col.sm3 ]
+                [ 
+                      br [] []
+                    , h1 [] [ text "Teaching material list" ]
+                ]
+            ]
+        , Grid.row [] [
+            Grid.col [ ]
+                [
+                      br [] []
+                    , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
+                    , Table.view config tableState acceptablePeople
+                ]
+            ]
         ]
+
 
 
 config : Table.Config TeachingResource Msg
