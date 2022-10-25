@@ -8,7 +8,3 @@ prepent='module TeachingMaterialData exposing (teachingMaterialString)
 \nteachingMaterialString = """'
 echo -en $prepent | cat - src/TeachingMaterialData.elm > temp && mv temp src/TeachingMaterialData.elm
 echo '"""' >> src/TeachingMaterialData.elm
-
-# svg map to elm code
-# https://github.com/pinata-llc/svg2elm
-svg2elm --module MapOfComputionalArchaeology data/comparchmap.svg > src/MapOfComputionalArchaeology.elm
