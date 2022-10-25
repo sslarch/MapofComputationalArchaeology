@@ -3,8 +3,10 @@ module TeachingMaterial exposing (Model, Msg(..), TeachingResource, config, init
 import TeachingMaterialData exposing (teachingMaterialString)
 
 import Browser
+import Chart as C
+import Chart.Attributes as CA
 import Html exposing (Html, div, h1, input, text, button, p)
-import Html.Attributes exposing (placeholder)
+import Html.Attributes exposing (placeholder, style)
 import Html.Events exposing (onInput)
 import Table
 import Task
@@ -86,10 +88,23 @@ view { elements, testString, tableState, query } =
 
         acceptablePeople =
             List.filter (String.contains lowerQuery << String.toLower << .name) elements
+
+        mapPlot = 
+            C.chart
+                [ CA.height 300
+                , CA.width 300
+                ]
+                [ C.xLabels [ CA.withGrid ]
+                , C.yLabels [ CA.withGrid ]
+                , C.series .x
+                    [ C.scatter .y []
+                    ]
+                    elements
+                ]
     in
     div []
-        [ --p [] [ text testString ]
-          h1 [] [ text "Teaching material list" ]
+        [ div [ style "width" "30%" ] [ mapPlot ]
+        , h1 [] [ text "Teaching material list" ]
         , input [ placeholder "Search by Name", onInput SetQuery ] []
         , Table.view config tableState acceptablePeople
         ]
@@ -113,7 +128,9 @@ config =
 -- PEOPLE
 
 type alias TeachingResource =
-    { name : String
+    { x : Float
+    , y : Float
+    , name : String
     , author : String
     , year : String
     , topic : String
@@ -122,6 +139,8 @@ type alias TeachingResource =
 decoder : Decoder TeachingResource
 decoder =
     Decode.into TeachingResource
+        |> Decode.pipeline (Decode.field "X" Decode.float)
+        |> Decode.pipeline (Decode.field "Y" Decode.float)
         |> Decode.pipeline (Decode.field "Name" Decode.string)
         |> Decode.pipeline (Decode.field "Author" Decode.string)
         |> Decode.pipeline (Decode.field "Year" Decode.string)
