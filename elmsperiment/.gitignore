@@ -4,3 +4,4 @@ elm-stuff
 repl-temp-*
 
 *.html
+src/MapOfComputionalArchaeology.elm
