@@ -95,21 +95,17 @@ view { elements, testString, tableState, query } =
 
         mapPlot = 
             C.chart
-                [ CA.height 350
-                , CA.width 700
+                [ CA.height 300
+                , CA.width 600
                 ]
                 [ C.xLabels [ CA.withGrid ]
                 , C.yLabels [ CA.withGrid ]
-                , C.series .x
-                    [ C.scatter .y []
-                    ]
-                    elements
                 , C.svgAt .min .max 0 0 [ comparchmap [] ]
-
+                , C.series .x [ C.scatter .y [] ] elements
                 ]
     in
     div []
-        [ div [ style "margin" "auto", style "width" "30%", style "border" "3px solid green" ] [ mapPlot ]
+        [ div [ style "margin" "auto", style "width" "50%", style "border" "3px solid green" ] [ mapPlot ]
         , h1 [] [ text "Teaching material list" ]
         , input [ placeholder "Search by Name", onInput SetQuery ] []
         , Table.view config tableState acceptablePeople

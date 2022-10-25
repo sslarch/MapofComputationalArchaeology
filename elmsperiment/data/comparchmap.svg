@@ -2,8 +2,8 @@
 <!-- Created with Inkscape (http://www.inkscape.org/) -->
 
 <svg
-   width="200mm"
-   height="100mm"
+   width="100%"
+   height="100%"
    viewBox="0 0 200 100"
    version="1.1"
    id="svg5"
@@ -24,9 +24,9 @@
      inkscape:deskcolor="#d1d1d1"
      inkscape:document-units="mm"
      showgrid="false"
-     inkscape:zoom="0.77147868"
-     inkscape:cx="298.12878"
-     inkscape:cy="282.57424"
+     inkscape:zoom="3.0859147"
+     inkscape:cx="169.80379"
+     inkscape:cy="70.319507"
      inkscape:window-width="1920"
      inkscape:window-height="1025"
      inkscape:window-x="0"
@@ -67,5 +67,12 @@
        cy="72.896683"
        rx="6.6077557"
        ry="3.333492" />
+    <rect
+       style="fill:#fbfff8;stroke:#000000;stroke-width:1.80661;stroke-linecap:round;stroke-linejoin:bevel"
+       id="rect343"
+       width="14.821074"
+       height="17.66128"
+       x="19.445396"
+       y="50" />
   </g>
 </svg>
