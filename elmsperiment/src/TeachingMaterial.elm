@@ -1,6 +1,6 @@
-module Presidents exposing (Model, Msg(..), Person, config, init, main, presidents, update, view)
+module TeachingMaterial exposing (Model, Msg(..), TeachingResource, config, init, main, teachingResources, update, view)
 
-import PresidentsData exposing (presidentsString)
+import TeachingMaterialData exposing (teachingMaterialString)
 
 import Browser
 import Html exposing (Html, div, h1, input, text, button, p)
@@ -25,19 +25,19 @@ main =
 
 
 type alias Model =
-    { people : List Person
+    { elements : List TeachingResource
     , testString : String
     , tableState : Table.State
     , query : String
     }
 
 
-init : List Person -> ( Model, Cmd Msg )
-init people =
+init : List TeachingResource -> ( Model, Cmd Msg )
+init elements =
     let
         model =
-            { people = presidents
-            , testString = presidentsString
+            { elements = teachingResources
+            , testString = ""
             , tableState = Table.initialSort "Year"
             , query = ""
             }
@@ -79,32 +79,32 @@ update msg model =
 
 
 view : Model -> Html Msg
-view { people, testString, tableState, query } =
+view { elements, testString, tableState, query } =
     let
         lowerQuery =
             String.toLower query
 
         acceptablePeople =
-            List.filter (String.contains lowerQuery << String.toLower << .name) people
+            List.filter (String.contains lowerQuery << String.toLower << .name) elements
     in
     div []
-        [ p [] [ text testString ]
-        , h1 [] [ text "Birthplaces of U.S. Presidents" ]
+        [ --p [] [ text testString ]
+          h1 [] [ text "Teaching material list" ]
         , input [ placeholder "Search by Name", onInput SetQuery ] []
         , Table.view config tableState acceptablePeople
         ]
 
 
-config : Table.Config Person Msg
+config : Table.Config TeachingResource Msg
 config =
     Table.config
         { toId = .name
         , toMsg = SetTableState
         , columns =
             [ Table.stringColumn "Name" .name
-            , Table.intColumn "Year" .year
-            , Table.stringColumn "City" .city
-            , Table.stringColumn "State" .state
+            , Table.stringColumn "Author" .author
+            , Table.stringColumn "Year" .year
+            , Table.stringColumn "Topic" .topic
             ]
         }
 
@@ -112,24 +112,24 @@ config =
 
 -- PEOPLE
 
-type alias Person =
+type alias TeachingResource =
     { name : String
-    , year : Int
-    , city : String
-    , state : String
+    , author : String
+    , year : String
+    , topic : String
     }
 
-decoder : Decoder Person
+decoder : Decoder TeachingResource
 decoder =
-    Decode.into Person
-        |> Decode.pipeline (Decode.field "name" Decode.string)
-        |> Decode.pipeline (Decode.field "year" Decode.int)
-        |> Decode.pipeline (Decode.field "city" Decode.string)
-        |> Decode.pipeline (Decode.field "state" Decode.string)
+    Decode.into TeachingResource
+        |> Decode.pipeline (Decode.field "Name" Decode.string)
+        |> Decode.pipeline (Decode.field "Author" Decode.string)
+        |> Decode.pipeline (Decode.field "Year" Decode.string)
+        |> Decode.pipeline (Decode.field "Topic" Decode.string)
 
-presidents : List Person
-presidents =
-    case Decode.decodeCsv Decode.FieldNamesFromFirstRow decoder presidentsString of
+teachingResources : List TeachingResource
+teachingResources =
+    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decoder teachingMaterialString of
         Err x -> let _ = Debug.log "Error when parsing input data" (Decode.errorToString x)
                  in []
         Ok x -> x

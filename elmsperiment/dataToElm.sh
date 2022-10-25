@@ -1,9 +1,9 @@
 #!/bin/bash
 
-cp data/presidents.csv src/PresidentsData.elm
-prepent='module PresidentsData exposing (presidentsString)
+cp data/teachingmaterial.csv src/TeachingMaterialData.elm
+prepent='module TeachingMaterialData exposing (teachingMaterialString)
 \n 
-\npresidentsString : String
-\npresidentsString = """'
-echo -en $prepent | cat - src/PresidentsData.elm > temp && mv temp src/PresidentsData.elm
-echo '"""' >> src/PresidentsData.elm
+\nteachingMaterialString : String
+\nteachingMaterialString = """'
+echo -en $prepent | cat - src/TeachingMaterialData.elm > temp && mv temp src/TeachingMaterialData.elm
+echo '"""' >> src/TeachingMaterialData.elm
