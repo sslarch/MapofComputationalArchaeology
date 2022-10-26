@@ -46,6 +46,7 @@ type alias Model =
     , center : CS.Point
     , dragging : Dragging
     , percentage : Float
+    , hovering : List (CI.One TeachingResource CI.Dot)
     }
 
 type Dragging
@@ -65,6 +66,7 @@ init elements =
             , center = { x = 100, y = 50 }
             , dragging = None
             , percentage = 100
+            , hovering = []
             }
     in
     ( model, Cmd.none )
@@ -74,9 +76,9 @@ init elements =
 type Msg
     = SetQuery String
     | SetTableState Table.State
-    -- mapZoom
+    -- map
     | OnMouseDown CS.Point
-    | OnMouseMove CS.Point
+    | OnMouseMove CS.Point (List (CI.One TeachingResource CI.Dot))
     | OnMouseUp CS.Point CS.Point
     | OnMouseLeave
     | OnZoomIn
@@ -98,25 +100,27 @@ update msg model =
             , Cmd.none
             )
 
-        -- mapZoom
+        -- map
         OnMouseDown offset ->
           ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
 
-        OnMouseMove offset ->
+        OnMouseMove offset hovering ->
           case model.dragging of
             CouldStillBeClick prevOffset ->
               if prevOffset == offset then
-                (model, Cmd.none)
+                ({ model | hovering = hovering }, Cmd.none)
               else
                 ( { model | center = updateCenter model.center prevOffset offset
                 , dragging = ForSureDragging offset
+                , hovering = hovering
                 }, Cmd.none )
             ForSureDragging prevOffset ->
               ( { model | center = updateCenter model.center prevOffset offset
               , dragging = ForSureDragging offset
+              , hovering = hovering
               }, Cmd.none )
             None ->
-              (model, Cmd.none)
+              ({ model | hovering = hovering }, Cmd.none)
 
         OnMouseUp offset coord ->
           case model.dragging of
@@ -130,7 +134,7 @@ update msg model =
               (model, Cmd.none)
 
         OnMouseLeave ->
-          ({ model | dragging = None }, Cmd.none)
+          ({ model | dragging = None, hovering = [] }, Cmd.none)
 
         OnZoomIn ->
           ({ model | percentage = model.percentage + 20 }, Cmd.none)
@@ -152,13 +156,16 @@ updateCenter center prevOffset offset =
 
 
 view : Model -> Html Msg
-view { elements, testString, tableState, query, center, dragging, percentage } =
+view { elements, testString, tableState, query, center, dragging, percentage, hovering } =
     let
         lowerQuery =
             String.toLower query
 
         acceptablePeople =
             List.filter (String.contains lowerQuery << String.toLower << .name) elements
+
+        findValueByCoordinates x y =
+            List.head <| List.filter (\e -> e.x == x && e.y == y) elements
 
         mapPlot = 
             C.chart
@@ -167,7 +174,7 @@ view { elements, testString, tableState, query, center, dragging, percentage } =
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
                 , CE.onMouseDown OnMouseDown CE.getOffset
-                , CE.onMouseMove OnMouseMove CE.getOffset
+                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getNearest CI.dots))
                 , CE.on "mouseup" (CE.map2 OnMouseUp CE.getOffset CE.getCoords)
                 , CE.onMouseLeave OnMouseLeave
                 , CA.htmlAttrs
@@ -213,7 +220,12 @@ view { elements, testString, tableState, query, center, dragging, percentage } =
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ C.scatter .y [] ] elements
+                , C.series .x [ C.scatter .y [] |> C.named "Teaching resource" ] elements
+                , C.each hovering <| \p item -> [ C.tooltip item [] [] [
+                      case (findValueByCoordinates (CI.getX item) (CI.getY item)) of
+                        Nothing -> H.text ""
+                        Just x -> H.text x.name
+                    ] ]
                 ]
     in
     Grid.container [] [
