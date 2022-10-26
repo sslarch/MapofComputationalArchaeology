@@ -299,8 +299,9 @@ decoder =
 teachingResources : List TeachingResource
 teachingResources =
     case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decoder teachingMaterialString of
-        Err x -> let _ = Debug.log "Error when parsing input data" (Decode.errorToString x)
-                 in []
+        Err x -> --let _ = Debug.log "Error when parsing input data" (Decode.errorToString x)
+                 --in []
+                 []
         Ok x -> x
 
 
