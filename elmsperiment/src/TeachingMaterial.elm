@@ -186,11 +186,13 @@ view { elements, testString, tableState, query, center, dragging, percentage, ho
                           None -> "grab"
                     ]
                 ]
-                [ C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
-                , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
-                , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
-                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ]
-                , C.htmlAt .max .max -5 -5
+                [ 
+                -- uncomment to get a coordinate grid
+                --C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                --, C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                --, C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                --, C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
+                 C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ H.span
                         [ HA.style "margin-right" "5px" ]
