@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# teaching material csv to elm code
-cp data/teachingmaterial.csv src/TeachingMaterialData.elm
+# teaching material tsv to elm code
+cp data/teachingmaterial.tsv src/TeachingMaterialData.elm
 prepent='module TeachingMaterialData exposing (teachingMaterialString)
 \n 
 \nteachingMaterialString : String

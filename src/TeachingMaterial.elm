@@ -26,6 +26,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
+import String exposing (split)
 
 main =
     Browser.element
@@ -278,23 +279,47 @@ config =
 -- PEOPLE
 
 type alias TeachingResource =
-    { x : Float
-    , y : Float
+    { id : String
     , name : String
     , author : String
     , year : String
     , topic : String
+    , language : String
+    , programmingLanguage : List String
+    , tools : List String
+    , levelOfDifficulty : List String
+    , description : String
+    , materialType : String
+    , tags : List String
+    , tagsOpenArchaeo : List String
+    , link : String
+    , citation : String
+    , x : Float
+    , y : Float
     }
+
+decodeStringList = Decode.map (\s -> split "," s) Decode.string
 
 decoder : Decoder TeachingResource
 decoder =
     Decode.into TeachingResource
-        |> Decode.pipeline (Decode.field "X" Decode.float)
-        |> Decode.pipeline (Decode.field "Y" Decode.float)
+        |> Decode.pipeline (Decode.field "ID" Decode.string)
         |> Decode.pipeline (Decode.field "Name" Decode.string)
         |> Decode.pipeline (Decode.field "Author" Decode.string)
         |> Decode.pipeline (Decode.field "Year" Decode.string)
         |> Decode.pipeline (Decode.field "Topic" Decode.string)
+        |> Decode.pipeline (Decode.field "Language" Decode.string)
+        |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
+        |> Decode.pipeline (Decode.field "Tools" decodeStringList)
+        |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeStringList)
+        |> Decode.pipeline (Decode.field "Description" Decode.string)
+        |> Decode.pipeline (Decode.field "Material_type" Decode.string)
+        |> Decode.pipeline (Decode.field "Tags" decodeStringList)
+        |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
+        |> Decode.pipeline (Decode.field "Link" Decode.string)
+        |> Decode.pipeline (Decode.field "Citation" Decode.string)
+        |> Decode.pipeline (Decode.field "X_map" Decode.float)
+        |> Decode.pipeline (Decode.field "Y_map" Decode.float)
 
 teachingResources : List TeachingResource
 teachingResources =
