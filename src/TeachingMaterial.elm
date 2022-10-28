@@ -144,7 +144,7 @@ update msg model =
         OnZoomOut ->
           ({ model | percentage = max 1 (model.percentage - 20) }, Cmd.none)
         OnZoomReset ->
-          ({ model | percentage = 100, center = { x = 0, y = 0 } }, Cmd.none)
+          ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
         -- table
         SetNameQuery newQuery ->
             ( { model | nameQuery = newQuery }
@@ -186,8 +186,8 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         -- map
         mapPlot = 
             C.chart
-                [ CA.height 270
-                , CA.width 492
+                [ CA.height 294
+                , CA.width 590
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
                 , CE.onMouseDown OnMouseDown CE.getOffset
@@ -205,10 +205,10 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 ]
                 [ 
                 -- uncomment to get a coordinate grid
-                --C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
-                --, C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
-                --, C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
-                --, C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
+                C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
                  C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ H.span
@@ -422,7 +422,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                           div [ 
                               style "overflow" "hidden"
                             , style "margin" "auto"
-                            , style "height" "380px"
+                            , style "height" "450px"
                             , style "width" "100%"
                             ] [ mapPlot ] 
                         ]
@@ -431,7 +431,12 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                     Grid.col [ ]
                         [
                           br [] []
-                        , h1 [] [ text "Teaching material list" ]
+                        , div [] [
+                                span [ style "font-size" "35px" ] [ text "Computational archaeology teaching material list" ]
+                              , span [ style "display" "inline-block", style "width" "20px" ] []
+                              , text " a project by the "
+                              , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
+                            ]
                         , Alert.simpleDark [] [
                             Grid.container []
                                 [ Grid.row [ Row.centerMd ]
