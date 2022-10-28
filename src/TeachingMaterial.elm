@@ -27,6 +27,9 @@ import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
 import String exposing (split)
+import FontAwesome as Icon exposing (Icon)
+import FontAwesome.Solid as Icon
+import FontAwesome.Styles as Icon
 
 main =
     Browser.element
@@ -299,7 +302,24 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
         linkColumn colName toString =
           Table.veryCustomColumn
             { name = colName
-            , viewData = \data -> (\s -> Table.HtmlDetails [] [ a [ href s ] [ text "Source" ] ]) (toString data)
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [ 
+                    Button.linkButton [
+                        Button.outlineSecondary
+                      , Button.attrs [ href s] ] [ Icon.view Icon.link ]
+                ]) (toString data)
+            , sorter = Table.unsortable
+            }
+
+        modalButtonColumn : String -> (data -> String) -> Table.Column data Msg
+        modalButtonColumn colName toString =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [
+                    Button.button [ 
+                          Button.outlineSecondary
+                        , Button.attrs [ HE.onClick <| OnZoomIn ]
+                        ] [ Icon.view Icon.infoCircle ] 
+                    ]) (toString data)
             , sorter = Table.unsortable
             }
 
@@ -312,11 +332,12 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     [ 
                       idColumn "ID" .id
                     , Table.stringColumn "Year" .year
-                    , nameColumn "Resource name" .name
+                    , nameColumn "" .name
                     , stringListColumn "Author" .author viewAuthor
                     , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
-                    , linkColumn "Link" .link
+                    , linkColumn "" .link
+                    , modalButtonColumn "" .id
                     ]
                 }
 
@@ -324,6 +345,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
         -- PAGE LAYOUT
         Grid.container [] [
               CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+            , Icon.css -- Fontawesome
             , Grid.row [] [
                   Grid.col [ Col.sm12 ] 
                     [ 
