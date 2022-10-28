@@ -53,6 +53,7 @@ type alias Model =
     , hovering : List (CI.One TeachingResource CI.Dot)
     -- modal
     , modalVisibility : Modal.Visibility
+    , selectedElement : Maybe TeachingResource
     }
 
 type Dragging
@@ -74,6 +75,7 @@ init elements =
             , hovering = []
             -- modal
             , modalVisibility = Modal.hidden
+            , selectedElement = Nothing
             }
     in
         ( model, Cmd.none )
@@ -93,7 +95,7 @@ type Msg
     | OnZoomReset
     -- modal
     | CloseModal
-    | ShowModal
+    | ShowModal (Maybe TeachingResource)
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -147,8 +149,8 @@ update msg model =
         -- modal
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden } , Cmd.none )
-        ShowModal ->
-            ( { model | modalVisibility = Modal.shown } , Cmd.none )
+        ShowModal element ->
+            ( { model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none )
 
 
 updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
@@ -159,14 +161,17 @@ updateCenter center prevOffset offset =
 
 -- VIEW
 
-
 view : Model -> Html Msg
-view { elements, tableState, query, center, dragging, percentage, hovering, modalVisibility } =
+view { elements, tableState, query, center, dragging, percentage, hovering, modalVisibility, selectedElement } =
     let
-        -- map
-        findValueByCoordinates x y =
+        -- helpers
+        findElementByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
 
+        findElementByID i =
+            List.head <| List.filter (\e -> e.id == i) elements
+
+        -- map
         mapPlot = 
             C.chart
                 [ CA.height 270
@@ -226,14 +231,13 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                 , C.each hovering <| \p item -> [ C.tooltip item [ 
                       CA.offset 0
                     ] [] [
-                      case (findValueByCoordinates (CI.getX item) (CI.getY item)) of
+                      case (findElementByCoordinates (CI.getX item) (CI.getY item)) of
                         Nothing -> H.text ""
                         Just x -> H.text (x.id ++ ": " ++ x.name)
                     ] ]
                 ]
 
         -- table
-
         lowerQuery =
             String.toLower query
 
@@ -319,7 +323,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
             , viewData = \data -> (\s -> Table.HtmlDetails [] [
                     Button.button [ 
                           Button.outlineSecondary
-                        , Button.attrs [ HE.onClick <| ShowModal ]
+                        , Button.attrs [ HE.onClick <| ShowModal (findElementByID (toString data)) ]
                         ] [ Icon.view Icon.infoCircle ] 
                     ]) (toString data)
             , sorter = Table.unsortable
@@ -342,22 +346,31 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                     , modalButtonColumn "" .id
                     ]
                 }
-        -- modal
 
+        -- modal
         detailsModal =
-            Modal.config CloseModal
-                |> Modal.small
-                |> Modal.hideOnBackdropClick True
-                |> Modal.h3 [] [ text "Modal header" ]
-                |> Modal.body [] [ p [] [ text "This is a modal for you !"] ]
-                |> Modal.footer []
-                    [ Button.button
-                        [ Button.outlinePrimary
-                        , Button.attrs [ HE.onClick CloseModal ]
-                        ]
-                        [ text "Close" ]
-                    ]
-                |> Modal.view modalVisibility
+            case selectedElement of
+                Nothing -> 
+                    Modal.config CloseModal
+                        |> Modal.small
+                        |> Modal.hideOnBackdropClick True
+                        |> Modal.h3 [] [ text "Error - this should never happen" ]
+                        |> Modal.view modalVisibility
+                Just x -> 
+                    Modal.config CloseModal
+                        |> Modal.small
+                        |> Modal.hideOnBackdropClick True
+                        |> Modal.h3 [] [ text x.name ]
+                        |> Modal.body [] [ p [] [ text x.name ] ]
+                        |> Modal.footer []
+                            [ Button.button
+                                [ Button.outlinePrimary
+                                , Button.attrs [ HE.onClick CloseModal ]
+                                ]
+                                [ text "Close" ]
+                            ]
+                        |> Modal.view modalVisibility
+
 
     in
         div [] [
