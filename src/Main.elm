@@ -1,4 +1,4 @@
-module TeachingMaterial exposing (Model, Msg(..), TeachingResource, init, main, teachingResources, update, view)
+module Main exposing (..)
 
 import TeachingMaterialData exposing (teachingMaterialString)
 import MapOfComputionalArchaeology exposing (comparchmap)
@@ -414,8 +414,8 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
     in
         div [] [
             Grid.container [] [
-                  CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
-                , Icon.css -- Fontawesome
+                  --CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ Col.sm12 ] 
                         [ 

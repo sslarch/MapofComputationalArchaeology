@@ -3,5 +3,7 @@ elm-stuff
 # elm-repl generated files
 repl-temp-*
 
-*.html
+# rendered, intermediate data products
 src/MapOfComputionalArchaeology.elm
+src/TeachingMaterialData.elm
+elm.js
