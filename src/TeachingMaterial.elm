@@ -217,11 +217,13 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ C.scatter .y [ CA.color CA.orange ] |> C.named "Teaching resource" ] elements
-                , C.each hovering <| \p item -> [ C.tooltip item [] [] [
+                , C.series .x [ C.scatter .y [ CA.color CA.red, CA.size 2, CA.square ] |> C.named "Teaching resource" ] elements
+                , C.each hovering <| \p item -> [ C.tooltip item [ 
+                      CA.offset 0
+                    ] [] [
                       case (findValueByCoordinates (CI.getX item) (CI.getY item)) of
                         Nothing -> H.text ""
-                        Just x -> H.text x.name
+                        Just x -> H.text (x.id ++ ": " ++ x.name)
                     ] ]
                 ]
 
