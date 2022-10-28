@@ -3,22 +3,6 @@ module Main exposing (..)
 import TeachingMaterialData exposing (teachingMaterialString)
 import MapOfComputionalArchaeology exposing (comparchmap)
 
-import Browser
-import Chart as C
-import Chart.Attributes as CA
-import Chart.Events as CE
-import Chart.Item as CI
-import Chart.Svg as CS
-import Svg as S
-import Svg.Attributes as SA
-import Html as H exposing (Html, div, h1, input, text, button, p, br, span, a)
-import Html.Attributes as HA exposing (placeholder, style, href)
-import Html.Events as HE exposing (onInput)
-import Table
-import Task
-import Csv.Decode as Decode exposing (Decoder)
-import List exposing (map)
-import VirtualDom exposing (attribute)
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
 import Bootstrap.Grid.Row as Row
@@ -27,10 +11,26 @@ import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
 import Bootstrap.Modal as Modal
-import String exposing (split)
+import Browser
+import Chart as C
+import Chart.Attributes as CA
+import Chart.Events as CE
+import Chart.Item as CI
+import Chart.Svg as CS
+import Csv.Decode as Decode exposing (Decoder)
 import FontAwesome as Icon exposing (Icon)
 import FontAwesome.Solid as Icon
 import FontAwesome.Styles as Icon
+import Html as H exposing (Html, div, h1, input, text, button, p, br, span, a)
+import Html.Attributes as HA exposing (placeholder, style, href)
+import Html.Events as HE exposing (onInput)
+import List exposing (map)
+import String exposing (split)
+import Svg as S
+import Svg.Attributes as SA
+import Table
+import Task
+import VirtualDom exposing (attribute)
 
 main =
     Browser.element
@@ -103,6 +103,11 @@ type Msg
     | CloseModal
     | ShowModal (Maybe TeachingResource)
 
+updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
+updateCenter center prevOffset offset =
+  { x = center.x + (prevOffset.x - offset.x)
+  , y = center.y + (prevOffset.y - offset.y)
+  }
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -164,13 +169,6 @@ update msg model =
         ShowModal element ->
             ( { model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none )
 
-
-updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
-updateCenter center prevOffset offset =
-  { x = center.x + (prevOffset.x - offset.x)
-  , y = center.y + (prevOffset.y - offset.y)
-  }
-
 -- VIEW
 
 view : Model -> Html Msg
@@ -179,7 +177,6 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         -- helpers
         findElementByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
-
         findElementByID i =
             List.head <| List.filter (\e -> e.id == i) elements
 
@@ -211,27 +208,27 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
                  C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
-                    [ H.span
+                    [ span
                         [ HA.style "margin-right" "5px" ]
-                        [ H.text (String.fromFloat percentage ++ "%") ]
+                        [ text (String.fromFloat percentage ++ "%") ]
                     , Button.button
                         [ Button.attrs [ HE.onClick OnZoomIn, Spacing.ml1 ]
                         , Button.outlineSecondary
                         , Button.small
                         ]
-                        [ H.text "+" ]
+                        [ text "+" ]
                     , Button.button
                         [ Button.attrs [ HE.onClick OnZoomOut, Spacing.ml1 ]
                         , Button.outlineSecondary
                         , Button.small
                         ]
-                        [ H.text "-" ]
+                        [ text "-" ]
                     , Button.button
                         [ Button.attrs [ HE.onClick OnZoomReset, Spacing.ml1 ]
                         , Button.outlineSecondary
                         , Button.small
                         ]
-                        [ H.text "⨯" ]
+                        [ text "⨯" ]
                     ]
 
                 , C.svgAt (\_ -> 0) (\_ -> 100) 0 0 [ comparchmap [
@@ -244,12 +241,12 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                       CA.offset 0
                     ] [] [
                       case (findElementByCoordinates (CI.getX item) (CI.getY item)) of
-                        Nothing -> H.text ""
-                        Just x -> H.text (x.id ++ ": " ++ x.name)
+                        Nothing -> text ""
+                        Just x -> text (x.id ++ ": " ++ x.name)
                     ] ]
                 ]
 
-        -- table
+        -- search/filter
         lowerNameQuery = String.toLower nameQuery
         lowerProgrammingQuery = String.toLower programmingLanguageQuery
         lowerTagsQuery = String.toLower tagsQuery
@@ -263,6 +260,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 )
             ) elements
 
+        -- table
         idColumn : String -> (data -> String) -> Table.Column data msg
         idColumn colName toString =
           Table.veryCustomColumn
@@ -412,6 +410,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
 
 
     in
+        -- main layout
         div [] [
             Grid.container [] [
                   --CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
@@ -509,9 +508,7 @@ decoder =
 teachingResources : List TeachingResource
 teachingResources =
     case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decoder teachingMaterialString of
-        Err x -> --let _ = Debug.log "Error when parsing input data" (Decode.errorToString x)
+        Err x -> --let _ = Debug.log "Error when parsing input data" (Decode.errorToString x) -- for debugging of .tsv file
                  --in []
                  []
         Ok x -> x
-
-
