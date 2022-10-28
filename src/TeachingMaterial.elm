@@ -348,6 +348,8 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                 }
 
         -- modal
+        oneRow name value = Grid.row [ ] [ Grid.col [ Col.sm3 ] [ text name ] , Grid.col [ Col.sm9 ] [ text value ] ]
+
         detailsModal =
             case selectedElement of
                 Nothing -> 
@@ -358,10 +360,28 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                         |> Modal.view modalVisibility
                 Just x -> 
                     Modal.config CloseModal
-                        |> Modal.small
+                        |> Modal.large
                         |> Modal.hideOnBackdropClick True
-                        |> Modal.h3 [] [ text x.name ]
-                        |> Modal.body [] [ p [] [ text x.name ] ]
+                        |> Modal.scrollableBody True
+                        |> Modal.h3 [] [ text x.id ]
+                        |> Modal.body [] [ 
+                            Grid.containerFluid [ ] [
+                                  oneRow "Name: "             x.name
+                                , oneRow "Author: "           <| String.join ", " x.author
+                                , oneRow "Year: "             x.year
+                                , oneRow "Topic: "            x.topic
+                                , oneRow "Description: "      x.description
+                                , oneRow "Language: "         x.language
+                                , oneRow "Prog. language: "   <| String.join ", " x.programmingLanguage
+                                , oneRow "Tools: "            <| String.join ", " x.tools
+                                , oneRow "Level: "            <| String.join ", " x.levelOfDifficulty
+                                , oneRow "Material type: "    x.materialType
+                                , oneRow "Tags: "             <| String.join ", " x.tags
+                                , oneRow "Tags OpenArchaeo: " <| String.join ", " x.tagsOpenArchaeo
+                                , oneRow "Link: "             x.link
+                                , oneRow "Citation: "         x.citation
+                                ]
+                            ]
                         |> Modal.footer []
                             [ Button.button
                                 [ Button.outlinePrimary
