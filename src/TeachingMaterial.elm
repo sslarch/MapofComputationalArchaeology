@@ -45,7 +45,9 @@ main =
 type alias Model =
     { elements : List TeachingResource
     , tableState : Table.State
-    , query : String
+    , nameQuery : String
+    , programmingLanguageQuery : String
+    , tagsQuery : String
     -- mapZoom
     , center : CS.Point
     , dragging : Dragging
@@ -67,7 +69,9 @@ init elements =
         model =
             { elements = teachingResources
             , tableState = Table.initialSort "ID"
-            , query = ""
+            , nameQuery = ""
+            , programmingLanguageQuery = ""
+            , tagsQuery = ""
             -- mapZoom
             , center = { x = 100, y = 50 }
             , dragging = None
@@ -83,7 +87,9 @@ init elements =
 -- UPDATE
 
 type Msg
-    = SetQuery String
+    = SetNameQuery String
+    | SetProgrammingLanguageQuery String
+    | SetTagsQuery String
     | SetTableState Table.State
     -- map
     | OnMouseDown CS.Point
@@ -140,8 +146,14 @@ update msg model =
         OnZoomReset ->
           ({ model | percentage = 100, center = { x = 0, y = 0 } }, Cmd.none)
         -- table
-        SetQuery newQuery ->
-            ( { model | query = newQuery }
+        SetNameQuery newQuery ->
+            ( { model | nameQuery = newQuery }
+            , Cmd.none )
+        SetProgrammingLanguageQuery newQuery ->
+            ( { model | programmingLanguageQuery = newQuery }
+            , Cmd.none )
+        SetTagsQuery newQuery ->
+            ( { model | tagsQuery = newQuery }
             , Cmd.none )
         SetTableState newState ->
             ( { model | tableState = newState }
@@ -162,7 +174,7 @@ updateCenter center prevOffset offset =
 -- VIEW
 
 view : Model -> Html Msg
-view { elements, tableState, query, center, dragging, percentage, hovering, modalVisibility, selectedElement } =
+view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, center, dragging, percentage, hovering, modalVisibility, selectedElement } =
     let
         -- helpers
         findElementByCoordinates x y =
@@ -238,11 +250,18 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                 ]
 
         -- table
-        lowerQuery =
-            String.toLower query
-
-        acceptablePeople =
-            List.filter (String.contains lowerQuery << String.toLower << .name) elements
+        lowerNameQuery = String.toLower nameQuery
+        lowerProgrammingQuery = String.toLower programmingLanguageQuery
+        lowerTagsQuery = String.toLower tagsQuery
+        acceptableResources = List.filter (
+                (\x ->
+                  let 
+                      matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
+                      matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
+                      matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
+                  in matchName && matchProg && matchTag
+                )
+            ) elements
 
         idColumn : String -> (data -> String) -> Table.Column data msg
         idColumn colName toString =
@@ -384,7 +403,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                             ]
                         |> Modal.footer []
                             [ Button.button
-                                [ Button.outlinePrimary
+                                [ Button.outlineSecondary
                                 , Button.attrs [ HE.onClick CloseModal ]
                                 ]
                                 [ text "Close" ]
@@ -413,8 +432,23 @@ view { elements, tableState, query, center, dragging, percentage, hovering, moda
                         [
                           br [] []
                         , h1 [] [ text "Teaching material list" ]
-                        , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
-                        , Table.view tableConfig tableState acceptablePeople
+                        , Alert.simpleDark [] [
+                            Grid.container []
+                                [ Grid.row [ Row.centerMd ]
+                                    [ Grid.col [ Col.xs12, Col.mdAuto ] [ text "Filter the list:" ]
+                                    , Grid.col [ Col.xs12, Col.mdAuto ] [ 
+                                            input [ style "margin" "2px", placeholder "by Name and Author", onInput SetNameQuery ] [] 
+                                        ]
+                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
+                                            input [ style "margin" "2px", placeholder "by Programming language", onInput SetProgrammingLanguageQuery ] []
+                                        ]
+                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
+                                            input [ style "margin" "2px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                        ]
+                                    ]
+                                ]
+                            ]
+                        , Table.view tableConfig tableState acceptableResources
                         ]
                     ]
                 ]
