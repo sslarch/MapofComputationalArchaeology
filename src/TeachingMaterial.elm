@@ -422,7 +422,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                           div [ 
                               style "overflow" "hidden"
                             , style "margin" "auto"
-                            , style "height" "450px"
+                            , style "height" "400px"
                             , style "width" "100%"
                             ] [ mapPlot ] 
                         ]
