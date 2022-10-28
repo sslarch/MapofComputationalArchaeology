@@ -234,27 +234,23 @@ view { elements, testString, tableState, query, center, dragging, percentage, ho
     Grid.container [] [
           CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
         , Grid.row [] [
-              Grid.col [ Col.sm9 ] 
-                    [ 
-                      br [] []
-                    , div [ 
-                          style "overflow" "hidden"
-                        , style "margin" "auto"
-                        , style "height" "380px"
-                        ] [ mapPlot ] 
-                    ]
-            , Grid.col [ Col.sm3 ]
+              Grid.col [ Col.sm12 ] 
                 [ 
-                      br [] []
-                    , h1 [] [ text "Teaching material list" ]
+                  div [ 
+                      style "overflow" "hidden"
+                    , style "margin" "auto"
+                    , style "height" "380px"
+                    , style "width" "100%"
+                    ] [ mapPlot ] 
                 ]
             ]
         , Grid.row [] [
             Grid.col [ ]
                 [
-                      br [] []
-                    , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
-                    , Table.view config tableState acceptablePeople
+                  br [] []
+                , h1 [] [ text "Teaching material list" ]
+                , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
+                , Table.view config tableState acceptablePeople
                 ]
             ]
         ]
