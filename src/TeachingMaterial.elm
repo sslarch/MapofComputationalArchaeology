@@ -11,8 +11,8 @@ import Chart.Item as CI
 import Chart.Svg as CS
 import Svg as S
 import Svg.Attributes as SA
-import Html as H exposing (Html, div, h1, input, text, button, p, br, span)
-import Html.Attributes as HA exposing (placeholder, style)
+import Html as H exposing (Html, div, h1, input, text, button, p, br, span, a)
+import Html.Attributes as HA exposing (placeholder, style, href)
 import Html.Events as HE exposing (onInput)
 import Table
 import Task
@@ -252,6 +252,14 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
         viewTags ss =
             Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
 
+        viewLinkColumn : String -> (data -> String) -> Table.Column data msg
+        viewLinkColumn colName toString =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [ a [ href s ] [ text "Source" ] ]) (toString data)
+            , sorter = Table.unsortable
+            }
+
         stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails msg) -> Table.Column data msg
         stringListColumn colName toStringList viewFunction =
           Table.veryCustomColumn
@@ -273,7 +281,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     , Table.stringColumn "Year" .year
                     , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
-                    , Table.stringColumn "Link" .link
+                    , viewLinkColumn "Link" .link
                     ]
                 }
 
