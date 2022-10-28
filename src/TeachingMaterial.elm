@@ -59,7 +59,7 @@ init elements =
     let
         model =
             { elements = teachingResources
-            , tableState = Table.initialSort "Year"
+            , tableState = Table.initialSort "ID"
             , query = ""
             -- mapZoom
             , center = { x = 100, y = 50 }
@@ -217,7 +217,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ C.scatter .y [] |> C.named "Teaching resource" ] elements
+                , C.series .x [ C.scatter .y [ CA.color CA.orange ] |> C.named "Teaching resource" ] elements
                 , C.each hovering <| \p item -> [ C.tooltip item [] [] [
                       case (findValueByCoordinates (CI.getX item) (CI.getY item)) of
                         Nothing -> H.text ""
@@ -233,16 +233,29 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
         acceptablePeople =
             List.filter (String.contains lowerQuery << String.toLower << .name) elements
 
-        badgeStyle = 
-            [ 
-              style "display" "inline-block"
-            , style "color" "white"
-            , style "padding" "1px 4px"
-            , style "text-align" "center"
-            , style "border-radius" "5px"
-            , style "margin-right" "3px"
-            , style "margin-bottom" "2px"
-            ]
+        idColumn : String -> (data -> String) -> Table.Column data msg
+        idColumn colName toString =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [ span [
+                  style "display" "inline-block"
+                , style "font-weight" "bold"
+                , style "padding" "5px"
+                ] [text s] ]) (toString data)
+            , sorter = Table.increasingOrDecreasingBy toString
+            }
+
+        nameColumn : String -> (data -> String) -> Table.Column data msg
+        nameColumn colName toString =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [ span [ 
+                  style "display" "inline-block"
+                , style "font-style" "italic"
+                , style "padding" "5px"
+                ] [text s] ]) (toString data)
+            , sorter = Table.unsortable
+            }
 
         viewAuthor : List String -> Table.HtmlDetails msg
         viewAuthor ss =
@@ -254,6 +267,16 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     Nothing -> Table.HtmlDetails [] [ text "" ]
                     Just a ->  Table.HtmlDetails [] [ text (if moreThanOneAuthor then (a ++ " et al.") else a) ]
 
+        badgeStyle = 
+            [ 
+              style "display" "inline-block"
+            , style "color" "white"
+            , style "padding" "1px 4px"
+            , style "text-align" "center"
+            , style "border-radius" "5px"
+            , style "margin" "3px"
+            ]
+
         viewProgrammingLanguage : List String -> Table.HtmlDetails msg
         viewProgrammingLanguage ss =
             Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
@@ -261,14 +284,6 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
         viewTags : List String -> Table.HtmlDetails msg
         viewTags ss =
             Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
-
-        viewLinkColumn : String -> (data -> String) -> Table.Column data msg
-        viewLinkColumn colName toString =
-          Table.veryCustomColumn
-            { name = colName
-            , viewData = \data -> (\s -> Table.HtmlDetails [] [ a [ href s ] [ text "Source" ] ]) (toString data)
-            , sorter = Table.unsortable
-            }
 
         stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails msg) -> Table.Column data msg
         stringListColumn colName toStringList viewFunction =
@@ -278,20 +293,28 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
             , sorter = Table.unsortable
             }
 
+        linkColumn : String -> (data -> String) -> Table.Column data msg
+        linkColumn colName toString =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> (\s -> Table.HtmlDetails [] [ a [ href s ] [ text "Source" ] ]) (toString data)
+            , sorter = Table.unsortable
+            }
+
         tableConfig : Table.Config TeachingResource Msg
         tableConfig =
             Table.config
-                { toId = .name
+                { toId = .id
                 , toMsg = SetTableState
                 , columns =
                     [ 
-                      Table.stringColumn "ID" .id
-                    , Table.stringColumn "Name" .name
-                    , stringListColumn "Author" .author viewAuthor
+                      idColumn "ID" .id
                     , Table.stringColumn "Year" .year
+                    , nameColumn "Resource name" .name
+                    , stringListColumn "Author" .author viewAuthor
                     , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
-                    , viewLinkColumn "Link" .link
+                    , linkColumn "Link" .link
                     ]
                 }
 
