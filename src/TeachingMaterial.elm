@@ -26,6 +26,7 @@ import Bootstrap.Grid.Col as Col
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
+import Bootstrap.Modal as Modal
 import String exposing (split)
 import FontAwesome as Icon exposing (Icon)
 import FontAwesome.Solid as Icon
@@ -50,6 +51,8 @@ type alias Model =
     , dragging : Dragging
     , percentage : Float
     , hovering : List (CI.One TeachingResource CI.Dot)
+    -- modal
+    , modalVisibility : Modal.Visibility
     }
 
 type Dragging
@@ -69,9 +72,11 @@ init elements =
             , dragging = None
             , percentage = 100
             , hovering = []
+            -- modal
+            , modalVisibility = Modal.hidden
             }
     in
-    ( model, Cmd.none )
+        ( model, Cmd.none )
 
 -- UPDATE
 
@@ -86,26 +91,17 @@ type Msg
     | OnZoomIn
     | OnZoomOut
     | OnZoomReset
+    -- modal
+    | CloseModal
+    | ShowModal
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        
-        SetQuery newQuery ->
-            ( { model | query = newQuery }
-            , Cmd.none
-            )
-
-        SetTableState newState ->
-            ( { model | tableState = newState }
-            , Cmd.none
-            )
-
         -- map
         OnMouseDown offset ->
           ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
-
         OnMouseMove offset hovering ->
           case model.dragging of
             CouldStillBeClick prevOffset ->
@@ -123,7 +119,6 @@ update msg model =
               }, Cmd.none )
             None ->
               ({ model | hovering = hovering }, Cmd.none)
-
         OnMouseUp offset coord ->
           case model.dragging of
             CouldStillBeClick prevOffset ->
@@ -134,18 +129,26 @@ update msg model =
               }, Cmd.none )
             None ->
               (model, Cmd.none)
-
         OnMouseLeave ->
           ({ model | dragging = None, hovering = [] }, Cmd.none)
-
         OnZoomIn ->
           ({ model | percentage = model.percentage + 20 }, Cmd.none)
-
         OnZoomOut ->
           ({ model | percentage = max 1 (model.percentage - 20) }, Cmd.none)
-
         OnZoomReset ->
           ({ model | percentage = 100, center = { x = 0, y = 0 } }, Cmd.none)
+        -- table
+        SetQuery newQuery ->
+            ( { model | query = newQuery }
+            , Cmd.none )
+        SetTableState newState ->
+            ( { model | tableState = newState }
+            , Cmd.none )
+        -- modal
+        CloseModal ->
+            ( { model | modalVisibility = Modal.hidden } , Cmd.none )
+        ShowModal ->
+            ( { model | modalVisibility = Modal.shown } , Cmd.none )
 
 
 updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
@@ -158,10 +161,9 @@ updateCenter center prevOffset offset =
 
 
 view : Model -> Html Msg
-view { elements, tableState, query, center, dragging, percentage, hovering } =
+view { elements, tableState, query, center, dragging, percentage, hovering, modalVisibility } =
     let
-        -- MAP PLOT
-        
+        -- map
         findValueByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
 
@@ -230,7 +232,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     ] ]
                 ]
 
-        -- TABLE
+        -- table
 
         lowerQuery =
             String.toLower query
@@ -317,7 +319,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
             , viewData = \data -> (\s -> Table.HtmlDetails [] [
                     Button.button [ 
                           Button.outlineSecondary
-                        , Button.attrs [ HE.onClick <| OnZoomIn ]
+                        , Button.attrs [ HE.onClick <| ShowModal ]
                         ] [ Icon.view Icon.infoCircle ] 
                     ]) (toString data)
             , sorter = Table.unsortable
@@ -340,32 +342,50 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     , modalButtonColumn "" .id
                     ]
                 }
+        -- modal
+
+        detailsModal =
+            Modal.config CloseModal
+                |> Modal.small
+                |> Modal.hideOnBackdropClick True
+                |> Modal.h3 [] [ text "Modal header" ]
+                |> Modal.body [] [ p [] [ text "This is a modal for you !"] ]
+                |> Modal.footer []
+                    [ Button.button
+                        [ Button.outlinePrimary
+                        , Button.attrs [ HE.onClick CloseModal ]
+                        ]
+                        [ text "Close" ]
+                    ]
+                |> Modal.view modalVisibility
 
     in
-        -- PAGE LAYOUT
-        Grid.container [] [
-              CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
-            , Icon.css -- Fontawesome
-            , Grid.row [] [
-                  Grid.col [ Col.sm12 ] 
-                    [ 
-                      div [ 
-                          style "overflow" "hidden"
-                        , style "margin" "auto"
-                        , style "height" "380px"
-                        , style "width" "100%"
-                        ] [ mapPlot ] 
+        div [] [
+            Grid.container [] [
+                  CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                , Icon.css -- Fontawesome
+                , Grid.row [] [
+                      Grid.col [ Col.sm12 ] 
+                        [ 
+                          div [ 
+                              style "overflow" "hidden"
+                            , style "margin" "auto"
+                            , style "height" "380px"
+                            , style "width" "100%"
+                            ] [ mapPlot ] 
+                        ]
+                    ]
+                , Grid.row [] [
+                    Grid.col [ ]
+                        [
+                          br [] []
+                        , h1 [] [ text "Teaching material list" ]
+                        , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
+                        , Table.view tableConfig tableState acceptablePeople
+                        ]
                     ]
                 ]
-            , Grid.row [] [
-                Grid.col [ ]
-                    [
-                      br [] []
-                    , h1 [] [ text "Teaching material list" ]
-                    , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
-                    , Table.view tableConfig tableState acceptablePeople
-                    ]
-                ]
+            , detailsModal
             ]
 
 -- DATA
