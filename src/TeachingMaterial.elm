@@ -1,4 +1,4 @@
-module TeachingMaterial exposing (Model, Msg(..), TeachingResource, config, init, main, teachingResources, update, view)
+module TeachingMaterial exposing (Model, Msg(..), TeachingResource, init, main, teachingResources, update, view)
 
 import TeachingMaterialData exposing (teachingMaterialString)
 import MapOfComputionalArchaeology exposing (comparchmap)
@@ -11,7 +11,7 @@ import Chart.Item as CI
 import Chart.Svg as CS
 import Svg as S
 import Svg.Attributes as SA
-import Html as H exposing (Html, div, h1, input, text, button, p, br)
+import Html as H exposing (Html, div, h1, input, text, button, p, br, span)
 import Html.Attributes as HA exposing (placeholder, style)
 import Html.Events as HE exposing (onInput)
 import Table
@@ -40,7 +40,6 @@ main =
 
 type alias Model =
     { elements : List TeachingResource
-    , testString : String
     , tableState : Table.State
     , query : String
     -- mapZoom
@@ -60,7 +59,6 @@ init elements =
     let
         model =
             { elements = teachingResources
-            , testString = ""
             , tableState = Table.initialSort "Year"
             , query = ""
             -- mapZoom
@@ -157,14 +155,10 @@ updateCenter center prevOffset offset =
 
 
 view : Model -> Html Msg
-view { elements, testString, tableState, query, center, dragging, percentage, hovering } =
+view { elements, tableState, query, center, dragging, percentage, hovering } =
     let
-        lowerQuery =
-            String.toLower query
-
-        acceptablePeople =
-            List.filter (String.contains lowerQuery << String.toLower << .name) elements
-
+        -- MAP PLOT
+        
         findValueByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
 
@@ -230,49 +224,86 @@ view { elements, testString, tableState, query, center, dragging, percentage, ho
                         Just x -> H.text x.name
                     ] ]
                 ]
+
+        -- TABLE
+
+        lowerQuery =
+            String.toLower query
+
+        acceptablePeople =
+            List.filter (String.contains lowerQuery << String.toLower << .name) elements
+
+        badgeStyle = 
+            [ 
+              style "display" "inline-block"
+            , style "color" "white"
+            , style "padding" "1px 4px"
+            , style "text-align" "center"
+            , style "border-radius" "5px"
+            , style "margin-right" "3px"
+            , style "margin-bottom" "2px"
+            ]
+
+        viewProgrammingLanguage : List String -> Table.HtmlDetails msg
+        viewProgrammingLanguage ss =
+            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
+
+        viewTags : List String -> Table.HtmlDetails msg
+        viewTags ss =
+            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
+
+        stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails msg) -> Table.Column data msg
+        stringListColumn colName toStringList viewFunction =
+          Table.veryCustomColumn
+            { name = colName
+            , viewData = \data -> viewFunction (toStringList data)
+            , sorter = Table.unsortable
+            }
+
+        tableConfig : Table.Config TeachingResource Msg
+        tableConfig =
+            Table.config
+                { toId = .name
+                , toMsg = SetTableState
+                , columns =
+                    [ 
+                      Table.stringColumn "ID" .id
+                    , Table.stringColumn "Name" .name
+                    , Table.stringColumn "Author" .author
+                    , Table.stringColumn "Year" .year
+                    , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
+                    , stringListColumn "Tags" .tags viewTags
+                    , Table.stringColumn "Link" .link
+                    ]
+                }
+
     in
-    Grid.container [] [
-          CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
-        , Grid.row [] [
-              Grid.col [ Col.sm12 ] 
-                [ 
-                  div [ 
-                      style "overflow" "hidden"
-                    , style "margin" "auto"
-                    , style "height" "380px"
-                    , style "width" "100%"
-                    ] [ mapPlot ] 
+        -- PAGE LAYOUT
+        Grid.container [] [
+              CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+            , Grid.row [] [
+                  Grid.col [ Col.sm12 ] 
+                    [ 
+                      div [ 
+                          style "overflow" "hidden"
+                        , style "margin" "auto"
+                        , style "height" "380px"
+                        , style "width" "100%"
+                        ] [ mapPlot ] 
+                    ]
+                ]
+            , Grid.row [] [
+                Grid.col [ ]
+                    [
+                      br [] []
+                    , h1 [] [ text "Teaching material list" ]
+                    , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
+                    , Table.view tableConfig tableState acceptablePeople
+                    ]
                 ]
             ]
-        , Grid.row [] [
-            Grid.col [ ]
-                [
-                  br [] []
-                , h1 [] [ text "Teaching material list" ]
-                , Alert.simpleDark [] [ text "Explore the list: ",  input [ placeholder "Search by Name", onInput SetQuery ] [] ]
-                , Table.view config tableState acceptablePeople
-                ]
-            ]
-        ]
 
-
-
-config : Table.Config TeachingResource Msg
-config =
-    Table.config
-        { toId = .name
-        , toMsg = SetTableState
-        , columns =
-            [ Table.stringColumn "Name" .name
-            , Table.stringColumn "Author" .author
-            , Table.stringColumn "Year" .year
-            , Table.stringColumn "Topic" .topic
-            ]
-        }
-
-
-
--- PEOPLE
+-- DATA
 
 type alias TeachingResource =
     { id : String
@@ -294,28 +325,29 @@ type alias TeachingResource =
     , y : Float
     }
 
-decodeStringList = Decode.map (\s -> split "," s) Decode.string
-
 decoder : Decoder TeachingResource
 decoder =
-    Decode.into TeachingResource
-        |> Decode.pipeline (Decode.field "ID" Decode.string)
-        |> Decode.pipeline (Decode.field "Name" Decode.string)
-        |> Decode.pipeline (Decode.field "Author" Decode.string)
-        |> Decode.pipeline (Decode.field "Year" Decode.string)
-        |> Decode.pipeline (Decode.field "Topic" Decode.string)
-        |> Decode.pipeline (Decode.field "Language" Decode.string)
-        |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
-        |> Decode.pipeline (Decode.field "Tools" decodeStringList)
-        |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeStringList)
-        |> Decode.pipeline (Decode.field "Description" Decode.string)
-        |> Decode.pipeline (Decode.field "Material_type" Decode.string)
-        |> Decode.pipeline (Decode.field "Tags" decodeStringList)
-        |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
-        |> Decode.pipeline (Decode.field "Link" Decode.string)
-        |> Decode.pipeline (Decode.field "Citation" Decode.string)
-        |> Decode.pipeline (Decode.field "X_map" Decode.float)
-        |> Decode.pipeline (Decode.field "Y_map" Decode.float)
+    let
+        decodeStringList = Decode.map (\s -> split "," s) Decode.string
+    in
+        Decode.into TeachingResource
+            |> Decode.pipeline (Decode.field "ID" Decode.string)
+            |> Decode.pipeline (Decode.field "Name" Decode.string)
+            |> Decode.pipeline (Decode.field "Author" Decode.string)
+            |> Decode.pipeline (Decode.field "Year" Decode.string)
+            |> Decode.pipeline (Decode.field "Topic" Decode.string)
+            |> Decode.pipeline (Decode.field "Language" Decode.string)
+            |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
+            |> Decode.pipeline (Decode.field "Tools" decodeStringList)
+            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeStringList)
+            |> Decode.pipeline (Decode.field "Description" Decode.string)
+            |> Decode.pipeline (Decode.field "Material_type" Decode.string)
+            |> Decode.pipeline (Decode.field "Tags" decodeStringList)
+            |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
+            |> Decode.pipeline (Decode.field "Link" Decode.string)
+            |> Decode.pipeline (Decode.field "Citation" Decode.string)
+            |> Decode.pipeline (Decode.field "X_map" Decode.float)
+            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
 
 teachingResources : List TeachingResource
 teachingResources =
