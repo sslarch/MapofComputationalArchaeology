@@ -244,6 +244,16 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
             , style "margin-bottom" "2px"
             ]
 
+        viewAuthor : List String -> Table.HtmlDetails msg
+        viewAuthor ss =
+            let 
+                firstAuthor = List.head ss
+                moreThanOneAuthor = List.length ss > 1
+            in
+                case firstAuthor of
+                    Nothing -> Table.HtmlDetails [] [ text "" ]
+                    Just a ->  Table.HtmlDetails [] [ text (if moreThanOneAuthor then (a ++ " et al.") else a) ]
+
         viewProgrammingLanguage : List String -> Table.HtmlDetails msg
         viewProgrammingLanguage ss =
             Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
@@ -277,7 +287,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
                     [ 
                       Table.stringColumn "ID" .id
                     , Table.stringColumn "Name" .name
-                    , Table.stringColumn "Author" .author
+                    , stringListColumn "Author" .author viewAuthor
                     , Table.stringColumn "Year" .year
                     , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
@@ -316,7 +326,7 @@ view { elements, tableState, query, center, dragging, percentage, hovering } =
 type alias TeachingResource =
     { id : String
     , name : String
-    , author : String
+    , author : List String
     , year : String
     , topic : String
     , language : String
@@ -341,7 +351,7 @@ decoder =
         Decode.into TeachingResource
             |> Decode.pipeline (Decode.field "ID" Decode.string)
             |> Decode.pipeline (Decode.field "Name" Decode.string)
-            |> Decode.pipeline (Decode.field "Author" Decode.string)
+            |> Decode.pipeline (Decode.field "Author" decodeStringList)
             |> Decode.pipeline (Decode.field "Year" Decode.string)
             |> Decode.pipeline (Decode.field "Topic" Decode.string)
             |> Decode.pipeline (Decode.field "Language" Decode.string)
