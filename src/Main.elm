@@ -267,33 +267,47 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
             { name = colName
             , viewData = \data -> (\s -> Table.HtmlDetails [] [ span [
                   style "display" "inline-block"
-                , style "font-weight" "bold"
-                , style "padding" "5px"
+                , style "padding-right" "5px"
+                , style "font-size" "12px"
+                , style "font-style" "italic"
+                , style "transform" "rotate(45deg)"
                 ] [text s] ]) (toString data)
             , sorter = Table.increasingOrDecreasingBy toString
             }
 
-        nameColumn : String -> (data -> String) -> Table.Column data msg
-        nameColumn colName toString =
+        resourceColumn : String -> (data -> String) -> (data -> String) -> (data -> List String) -> Table.Column data msg
+        resourceColumn colName getYear getName getAuthors =
           Table.veryCustomColumn
             { name = colName
-            , viewData = \data -> (\s -> Table.HtmlDetails [] [ span [ 
-                  style "display" "inline-block"
-                , style "font-style" "italic"
-                , style "padding" "5px"
-                ] [text s] ]) (toString data)
-            , sorter = Table.unsortable
+            , viewData = \data -> (\y n a -> Table.HtmlDetails [] [
+                    div [ style "display" "inline-block", style "padding-right" "5px", style "font-size" "16px" ] [
+                        span [                  
+                          style "font-weight" "bold"
+                        ] [ text n ],
+                        br [] [] ,
+                        text "by ",
+                        span [                  
+                          style "font-style" "italic"
+                        ] [ text a ],
+                        text ", ",
+                        span [
+                          style "font-style" "italic"
+                        , style "text-decoration" "underline"
+                        ] [ text y ]
+                    ] 
+                ]) (getYear data) (getName data) (renderAuthors <| getAuthors data)
+            , sorter = Table.increasingOrDecreasingBy getYear
             }
 
-        viewAuthor : List String -> Table.HtmlDetails msg
-        viewAuthor ss =
+        renderAuthors : List String -> String
+        renderAuthors ss =
             let 
                 firstAuthor = List.head ss
                 moreThanOneAuthor = List.length ss > 1
             in
                 case firstAuthor of
-                    Nothing -> Table.HtmlDetails [] [ text "" ]
-                    Just a ->  Table.HtmlDetails [] [ text (if moreThanOneAuthor then (a ++ " et al.") else a) ]
+                    Nothing -> ""
+                    Just a ->  if moreThanOneAuthor then (a ++ " et al.") else a
 
         badgeStyle = 
             [ 
@@ -302,7 +316,8 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
             , style "padding" "1px 4px"
             , style "text-align" "center"
             , style "border-radius" "5px"
-            , style "margin" "3px"
+            , style "margin" "2px"
+            , style "font-size" "15px"
             ]
 
         viewProgrammingLanguage : List String -> Table.HtmlDetails msg
@@ -321,28 +336,22 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
             , sorter = Table.unsortable
             }
 
-        linkColumn : String -> (data -> String) -> Table.Column data msg
-        linkColumn colName toString =
-          Table.veryCustomColumn
-            { name = colName
-            , viewData = \data -> (\s -> Table.HtmlDetails [] [ 
-                    Button.linkButton [
-                        Button.outlineSecondary
-                      , Button.attrs [ href s] ] [ Icon.view Icon.link ]
-                ]) (toString data)
-            , sorter = Table.unsortable
-            }
-
-        modalButtonColumn : String -> (data -> String) -> Table.Column data Msg
-        modalButtonColumn colName toString =
+        linkAndModalColumn : String -> (data -> String) -> (data -> String) -> Table.Column data Msg
+        linkAndModalColumn colName getLink getID =
           Table.veryCustomColumn
             { name = colName
             , viewData = \data -> (\s -> Table.HtmlDetails [] [
-                    Button.button [ 
-                          Button.outlineSecondary
-                        , Button.attrs [ HE.onClick <| ShowModal (findElementByID (toString data)) ]
-                        ] [ Icon.view Icon.infoCircle ] 
-                    ]) (toString data)
+                div [] [
+                      Button.linkButton [
+                        Button.small, Button.block, Button.outlineSecondary
+                      , Button.attrs [ href s, style "margin-bottom" "-5px" ]
+                      ] [ Icon.view Icon.link ]
+                    , Button.button [ 
+                        Button.small, Button.block, Button.outlineSecondary
+                      , Button.attrs [ HE.onClick <| ShowModal (findElementByID (getID data)), style "margin-bottom" "10px" ]
+                      ] [ Icon.view Icon.infoCircle ] 
+                    ]
+                ]) (getLink data)
             , sorter = Table.unsortable
             }
 
@@ -354,18 +363,15 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 , columns =
                     [ 
                       idColumn "ID" .id
-                    , Table.stringColumn "Year" .year
-                    , nameColumn "" .name
-                    , stringListColumn "Author" .author viewAuthor
-                    , stringListColumn "Code" .programmingLanguage viewProgrammingLanguage
+                    , resourceColumn "Material" .year .name .author
+                    , stringListColumn "Language" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
-                    , linkColumn "" .link
-                    , modalButtonColumn "" .id
+                    , linkAndModalColumn "" .link .id
                     ]
                 }
 
         -- modal
-        oneRow name value = Grid.row [ ] [ Grid.col [ Col.sm3 ] [ text name ] , Grid.col [ Col.sm9 ] [ text value ] ]
+        oneRow name value = Grid.row [ ] [ Grid.col [ Col.sm3 ] [ span [ style "font-weight" "bold" ] [ text name ] ] , Grid.col [ Col.sm9 ] [ text value ] ]
 
         detailsModal =
             case selectedElement of
@@ -413,7 +419,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         -- main layout
         div [] [
             Grid.container [] [
-                  --CDN.stylesheet -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ Col.sm12 ] 
@@ -421,7 +427,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                           div [ 
                               style "overflow" "hidden"
                             , style "margin" "auto"
-                            , style "height" "400px"
+                            , style "height" "100%"
                             , style "width" "100%"
                             ] [ mapPlot ] 
                         ]
@@ -441,10 +447,10 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                                 [ Grid.row [ Row.centerMd ]
                                     [ Grid.col [ Col.xs12, Col.mdAuto ] [ text "Filter the list:" ]
                                     , Grid.col [ Col.xs12, Col.mdAuto ] [ 
-                                            input [ style "margin" "2px", placeholder "by Name and Author", onInput SetNameQuery ] [] 
+                                            input [ style "margin" "2px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
                                         ]
                                     , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                            input [ style "margin" "2px", placeholder "by Programming language", onInput SetProgrammingLanguageQuery ] []
+                                            input [ style "margin" "2px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
                                         ]
                                     , Grid.col [ Col.xs12, Col.mdAuto ] [
                                             input [ style "margin" "2px", placeholder "by Tag", onInput SetTagsQuery ] []
