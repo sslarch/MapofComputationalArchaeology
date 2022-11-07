@@ -53,6 +53,7 @@ type alias Model =
     , dragging : Dragging
     , percentage : Float
     , hovering : List (CI.One TeachingResource CI.Dot)
+    , clickedElement : Maybe TeachingResource
     -- modal
     , modalVisibility : Modal.Visibility
     , selectedElement : Maybe TeachingResource
@@ -77,6 +78,7 @@ init elements =
             , dragging = None
             , percentage = 100
             , hovering = []
+            , clickedElement = Nothing
             -- modal
             , modalVisibility = Modal.hidden
             , selectedElement = Nothing
@@ -91,7 +93,9 @@ type Msg
     | SetProgrammingLanguageQuery String
     | SetTagsQuery String
     | SetTableState Table.State
+    | ClearFilter
     -- map
+    | OnMouseClick (List (CI.One TeachingResource CI.Dot))
     | OnMouseDown CS.Point
     | OnMouseMove CS.Point (List (CI.One TeachingResource CI.Dot))
     | OnMouseUp CS.Point CS.Point
@@ -113,6 +117,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         -- map
+        OnMouseClick hovering ->
+          case (List.head hovering) of
+            Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
+            Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
         OnMouseDown offset ->
           ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
         OnMouseMove offset hovering ->
@@ -163,6 +171,14 @@ update msg model =
         SetTableState newState ->
             ( { model | tableState = newState }
             , Cmd.none )
+        ClearFilter ->
+            ( { model |
+                  nameQuery = ""
+                , programmingLanguageQuery = ""
+                , tagsQuery = ""
+                , clickedElement = Nothing
+              }
+            , Cmd.none )
         -- modal
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden } , Cmd.none )
@@ -172,7 +188,19 @@ update msg model =
 -- VIEW
 
 view : Model -> Html Msg
-view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, center, dragging, percentage, hovering, modalVisibility, selectedElement } =
+view {  elements,
+        tableState,
+        nameQuery,
+        programmingLanguageQuery,
+        tagsQuery,
+        center,
+        dragging,
+        percentage,
+        hovering,
+        clickedElement,
+        modalVisibility,
+        selectedElement
+    } =
     let
         -- helpers
         findElementByCoordinates x y =
@@ -187,8 +215,9 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 , CA.width 590
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
+                , CE.onClick OnMouseClick (CE.getWithin 15 CI.dots)
                 , CE.onMouseDown OnMouseDown CE.getOffset
-                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getNearest CI.dots))
+                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getWithin 15 CI.dots))
                 , CE.on "mouseup" (CE.map2 OnMouseUp CE.getOffset CE.getCoords)
                 , CE.onMouseLeave OnMouseLeave
                 , CA.htmlAttrs
@@ -236,7 +265,13 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ C.scatter .y [ CA.color CA.red, CA.size 2, CA.square ] |> C.named "Teaching resource" ] elements
+                , C.series .x [ 
+                    C.scatter .y 
+                        [ CA.color CA.red, CA.size 2, CA.square ] |>
+                        C.named "Teaching resource" |>
+                        C.amongst hovering (\_ ->
+                            [ CA.border CA.orange, CA.size 3, CA.opacity 0, CA.borderWidth 2 ]
+                        ) ] elements
                 , C.each hovering <| \p item -> [ C.tooltip item [ 
                       CA.offset 0
                     ] [] [
@@ -250,15 +285,19 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         lowerNameQuery = String.toLower nameQuery
         lowerProgrammingQuery = String.toLower programmingLanguageQuery
         lowerTagsQuery = String.toLower tagsQuery
-        acceptableResources = List.filter (
-                (\x ->
-                  let 
-                      matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
-                      matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
-                      matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
-                  in matchName && matchProg && matchTag
-                )
-            ) elements
+        acceptableResources = 
+            case clickedElement of
+                Nothing -> List.filter (
+                    (\x ->
+                        let 
+                            matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
+                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
+                            matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
+                        in matchName && matchProg && matchTag
+                        )
+                    ) elements
+                Just x -> [x]
+
 
         -- table
         idColumn : String -> (data -> String) -> Table.Column data msg
@@ -419,7 +458,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         -- main layout
         div [] [
             Grid.container [] [
-                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ Col.sm12 ] 
@@ -454,6 +493,12 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                                         ]
                                     , Grid.col [ Col.xs12, Col.mdAuto ] [
                                             input [ style "margin" "2px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                        ]
+                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
+                                        Button.button [ 
+                                            Button.small, Button.block, Button.outlineSecondary
+                                          , Button.attrs [ HE.onClick ClearFilter ]
+                                          ] [ text "Clear filters" ] 
                                         ]
                                     ]
                                 ]
