@@ -223,10 +223,12 @@ view {  elements,
                 , CA.htmlAttrs
                     [ HA.style "user-select" "none"
                     , HA.style "cursor" <|
-                        case dragging of
-                          CouldStillBeClick _ -> "grabbing"
-                          ForSureDragging _ -> "grabbing"
-                          None -> "grab"
+                        case hovering of
+                            [] -> case dragging of
+                                      CouldStillBeClick _ -> "grabbing"
+                                      ForSureDragging _ -> "grabbing"
+                                      None -> "grab"
+                            _ -> "pointer"
                     ]
                 ]
                 [ 
