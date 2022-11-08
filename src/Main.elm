@@ -484,27 +484,36 @@ view {  elements,
                               , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
                             ]
                         , Alert.simpleDark [] [
-                            Grid.container []
-                                [ Grid.row [ Row.centerMd ]
-                                    [ Grid.col [ Col.xs12, Col.mdAuto ] [ text "Filter the list:" ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [ 
-                                            input [ style "margin" "2px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
+                            Grid.container [] [ 
+                                Grid.row [ Row.centerMd ] [
+                                      Grid.col [] [
+                                            div [ style "display" "inline-block", style "width" "100%" ] [
+                                                  Icon.view Icon.filter
+                                                , text <| " Filter the list (" ++ 
+                                                    (String.fromInt <| List.length acceptableResources) ++
+                                                    "/" ++
+                                                    (String.fromInt <| List.length elements) ++ 
+                                                    ") "
+                                                , Button.button [ 
+                                                    Button.attrs [ style "float" "right" ]
+                                                  , Button.small, Button.outlineDanger
+                                                  , Button.attrs [ HE.onClick ClearFilter ]
+                                                  ] [ Icon.view Icon.filterCircleXmark, text " Clear filters" ]
+                                            ]
                                         ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                            input [ style "margin" "2px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
+                                    , Grid.colBreak []
+                                    , Grid.col [] [ 
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
                                         ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                            input [ style "margin" "2px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                    , Grid.col [] [
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
                                         ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                        Button.button [ 
-                                            Button.small, Button.block, Button.outlineSecondary
-                                          , Button.attrs [ HE.onClick ClearFilter ]
-                                          ] [ text "Clear filters" ] 
+                                    , Grid.col [] [
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
                                         ]
-                                    ]
                                 ]
                             ]
+                        ]
                         , Table.view tableConfig tableState acceptableResources
                         ]
                     ]
