@@ -28,7 +28,7 @@ import List exposing (map)
 import String exposing (split)
 import Svg as S
 import Svg.Attributes as SA
-import Table
+import Table exposing (defaultCustomizations)
 import Task
 import VirtualDom exposing (attribute)
 
@@ -53,6 +53,7 @@ type alias Model =
     , dragging : Dragging
     , percentage : Float
     , hovering : List (CI.One TeachingResource CI.Dot)
+    , clickedElement : Maybe TeachingResource
     -- modal
     , modalVisibility : Modal.Visibility
     , selectedElement : Maybe TeachingResource
@@ -77,6 +78,7 @@ init elements =
             , dragging = None
             , percentage = 100
             , hovering = []
+            , clickedElement = Nothing
             -- modal
             , modalVisibility = Modal.hidden
             , selectedElement = Nothing
@@ -91,7 +93,9 @@ type Msg
     | SetProgrammingLanguageQuery String
     | SetTagsQuery String
     | SetTableState Table.State
+    | ClearFilter
     -- map
+    | OnMouseClick (List (CI.One TeachingResource CI.Dot))
     | OnMouseDown CS.Point
     | OnMouseMove CS.Point (List (CI.One TeachingResource CI.Dot))
     | OnMouseUp CS.Point CS.Point
@@ -113,6 +117,10 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         -- map
+        OnMouseClick hovering ->
+          case (List.head hovering) of
+            Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
+            Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
         OnMouseDown offset ->
           ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
         OnMouseMove offset hovering ->
@@ -135,7 +143,7 @@ update msg model =
         OnMouseUp offset coord ->
           case model.dragging of
             CouldStillBeClick prevOffset ->
-              ({ model | center = coord, dragging = None }, Cmd.none)
+              ({ model | dragging = None }, Cmd.none)
             ForSureDragging prevOffset ->
               ( { model | center = updateCenter model.center prevOffset offset
               , dragging = None
@@ -163,6 +171,14 @@ update msg model =
         SetTableState newState ->
             ( { model | tableState = newState }
             , Cmd.none )
+        ClearFilter ->
+            ( { model |
+                  nameQuery = ""
+                , programmingLanguageQuery = ""
+                , tagsQuery = ""
+                , clickedElement = Nothing
+              }
+            , Cmd.none )
         -- modal
         CloseModal ->
             ( { model | modalVisibility = Modal.hidden } , Cmd.none )
@@ -172,7 +188,19 @@ update msg model =
 -- VIEW
 
 view : Model -> Html Msg
-view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, center, dragging, percentage, hovering, modalVisibility, selectedElement } =
+view {  elements,
+        tableState,
+        nameQuery,
+        programmingLanguageQuery,
+        tagsQuery,
+        center,
+        dragging,
+        percentage,
+        hovering,
+        clickedElement,
+        modalVisibility,
+        selectedElement
+    } =
     let
         -- helpers
         findElementByCoordinates x y =
@@ -187,26 +215,29 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 , CA.width 590
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
+                , CE.onClick OnMouseClick (CE.getWithin 15 CI.dots)
                 , CE.onMouseDown OnMouseDown CE.getOffset
-                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getNearest CI.dots))
+                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getWithin 15 CI.dots))
                 , CE.on "mouseup" (CE.map2 OnMouseUp CE.getOffset CE.getCoords)
                 , CE.onMouseLeave OnMouseLeave
                 , CA.htmlAttrs
                     [ HA.style "user-select" "none"
                     , HA.style "cursor" <|
-                        case dragging of
-                          CouldStillBeClick _ -> "grabbing"
-                          ForSureDragging _ -> "grabbing"
-                          None -> "grab"
+                        case hovering of
+                            [] -> case dragging of
+                                      CouldStillBeClick _ -> "grabbing"
+                                      ForSureDragging _ -> "grabbing"
+                                      None -> "grab"
+                            _ -> "pointer"
                     ]
                 ]
                 [ 
-                -- uncomment to get a coordinate grid
-                C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                  -- uncomment to get a coordinate grid
+                  C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
-                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
-                 C.htmlAt .max .max -5 -5
+                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                , C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ span
                         [ HA.style "margin-right" "5px" ]
@@ -236,7 +267,13 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ C.scatter .y [ CA.color CA.red, CA.size 2, CA.square ] |> C.named "Teaching resource" ] elements
+                , C.series .x [
+                    C.scatter .y 
+                        [ CA.color CA.red, CA.size 2, CA.square ] |>
+                        C.named "Teaching resource" |>
+                        C.amongst hovering (\_ ->
+                            [ CA.border CA.orange, CA.size 3, CA.opacity 0, CA.borderWidth 2 ]
+                        ) ] elements
                 , C.each hovering <| \p item -> [ C.tooltip item [ 
                       CA.offset 0
                     ] [] [
@@ -250,15 +287,19 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
         lowerNameQuery = String.toLower nameQuery
         lowerProgrammingQuery = String.toLower programmingLanguageQuery
         lowerTagsQuery = String.toLower tagsQuery
-        acceptableResources = List.filter (
-                (\x ->
-                  let 
-                      matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
-                      matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
-                      matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
-                  in matchName && matchProg && matchTag
-                )
-            ) elements
+        acceptableResources = 
+            case clickedElement of
+                Nothing -> List.filter (
+                    (\x ->
+                        let 
+                            matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
+                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
+                            matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
+                        in matchName && matchProg && matchTag
+                        )
+                    ) elements
+                Just x -> [x]
+
 
         -- table
         idColumn : String -> (data -> String) -> Table.Column data msg
@@ -344,11 +385,11 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                 div [] [
                       Button.linkButton [
                         Button.small, Button.block, Button.outlineSecondary
-                      , Button.attrs [ href s, style "margin-bottom" "-5px" ]
+                      , Button.attrs [ href s, style "margin-bottom" "-5px", style "width" "40px" ]
                       ] [ Icon.view Icon.link ]
                     , Button.button [ 
                         Button.small, Button.block, Button.outlineSecondary
-                      , Button.attrs [ HE.onClick <| ShowModal (findElementByID (getID data)), style "margin-bottom" "10px" ]
+                      , Button.attrs [ HE.onClick <| ShowModal (findElementByID (getID data)), style "margin-bottom" "10px", style "width" "40px" ]
                       ] [ Icon.view Icon.infoCircle ] 
                     ]
                 ]) (getLink data)
@@ -357,7 +398,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
 
         tableConfig : Table.Config TeachingResource Msg
         tableConfig =
-            Table.config
+            Table.customConfig
                 { toId = .id
                 , toMsg = SetTableState
                 , columns =
@@ -368,6 +409,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
+                , customizations = { defaultCustomizations | tableAttrs = [ style "width" "100%" ] }
                 }
 
         -- modal
@@ -422,8 +464,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                   --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
-                      Grid.col [ Col.sm12 ] 
-                        [ 
+                      Grid.col [ ] [
                           div [ 
                               style "overflow" "hidden"
                             , style "margin" "auto"
@@ -433,8 +474,7 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                         ]
                     ]
                 , Grid.row [] [
-                    Grid.col [ ]
-                        [
+                    Grid.col [ ] [
                           br [] []
                         , div [] [
                                 span [ style "font-size" "35px" ] [ text "Computational archaeology teaching material list" ]
@@ -443,21 +483,36 @@ view { elements, tableState, nameQuery, programmingLanguageQuery, tagsQuery, cen
                               , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
                             ]
                         , Alert.simpleDark [] [
-                            Grid.container []
-                                [ Grid.row [ Row.centerMd ]
-                                    [ Grid.col [ Col.xs12, Col.mdAuto ] [ text "Filter the list:" ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [ 
-                                            input [ style "margin" "2px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
+                            Grid.container [] [ 
+                                Grid.row [ Row.centerMd ] [
+                                      Grid.col [] [
+                                            div [ style "display" "inline-block", style "width" "100%" ] [
+                                                  Icon.view Icon.filter
+                                                , text <| " Filter the list (" ++ 
+                                                    (String.fromInt <| List.length acceptableResources) ++
+                                                    "/" ++
+                                                    (String.fromInt <| List.length elements) ++ 
+                                                    ") "
+                                                , Button.button [ 
+                                                    Button.attrs [ style "float" "right" ]
+                                                  , Button.small, Button.outlineDanger
+                                                  , Button.attrs [ HE.onClick ClearFilter ]
+                                                  ] [ Icon.view Icon.filterCircleXmark, text " Clear filters" ]
+                                            ]
                                         ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                            input [ style "margin" "2px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
+                                    , Grid.colBreak []
+                                    , Grid.col [] [ 
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
                                         ]
-                                    , Grid.col [ Col.xs12, Col.mdAuto ] [
-                                            input [ style "margin" "2px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                    , Grid.col [] [
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
                                         ]
-                                    ]
+                                    , Grid.col [] [
+                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                        ]
                                 ]
                             ]
+                        ]
                         , Table.view tableConfig tableState acceptableResources
                         ]
                     ]
