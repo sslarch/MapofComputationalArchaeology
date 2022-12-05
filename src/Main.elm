@@ -28,7 +28,7 @@ import List exposing (map)
 import String exposing (split)
 import Svg as S
 import Svg.Attributes as SA
-import Table
+import Table exposing (defaultCustomizations)
 import Task
 import VirtualDom exposing (attribute)
 
@@ -385,11 +385,11 @@ view {  elements,
                 div [] [
                       Button.linkButton [
                         Button.small, Button.block, Button.outlineSecondary
-                      , Button.attrs [ href s, style "margin-bottom" "-5px" ]
+                      , Button.attrs [ href s, style "margin-bottom" "-5px", style "width" "40px" ]
                       ] [ Icon.view Icon.link ]
                     , Button.button [ 
                         Button.small, Button.block, Button.outlineSecondary
-                      , Button.attrs [ HE.onClick <| ShowModal (findElementByID (getID data)), style "margin-bottom" "10px" ]
+                      , Button.attrs [ HE.onClick <| ShowModal (findElementByID (getID data)), style "margin-bottom" "10px", style "width" "40px" ]
                       ] [ Icon.view Icon.infoCircle ] 
                     ]
                 ]) (getLink data)
@@ -398,7 +398,7 @@ view {  elements,
 
         tableConfig : Table.Config TeachingResource Msg
         tableConfig =
-            Table.config
+            Table.customConfig
                 { toId = .id
                 , toMsg = SetTableState
                 , columns =
@@ -409,6 +409,7 @@ view {  elements,
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
+                , customizations = { defaultCustomizations | tableAttrs = [ style "width" "100%" ] }
                 }
 
         -- modal
@@ -463,8 +464,7 @@ view {  elements,
                   CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
-                      Grid.col [ Col.sm12 ] 
-                        [ 
+                      Grid.col [ ] [
                           div [ 
                               style "overflow" "hidden"
                             , style "margin" "auto"
@@ -474,8 +474,7 @@ view {  elements,
                         ]
                     ]
                 , Grid.row [] [
-                    Grid.col [ ]
-                        [
+                    Grid.col [ ] [
                           br [] []
                         , div [] [
                                 span [ style "font-size" "35px" ] [ text "Computational archaeology teaching material list" ]
