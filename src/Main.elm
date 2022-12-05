@@ -267,7 +267,7 @@ view {  elements,
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
-                , C.series .x [ 
+                , C.series .x [
                     C.scatter .y 
                         [ CA.color CA.red, CA.size 2, CA.square ] |>
                         C.named "Teaching resource" |>
