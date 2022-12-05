@@ -143,7 +143,7 @@ update msg model =
         OnMouseUp offset coord ->
           case model.dragging of
             CouldStillBeClick prevOffset ->
-              ({ model | center = coord, dragging = None }, Cmd.none)
+              ({ model | dragging = None }, Cmd.none)
             ForSureDragging prevOffset ->
               ( { model | center = updateCenter model.center prevOffset offset
               , dragging = None
@@ -232,12 +232,12 @@ view {  elements,
                     ]
                 ]
                 [ 
-                -- uncomment to get a coordinate grid
-                C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
+                  -- uncomment to get a coordinate grid
+                  C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
-                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ],
-                 C.htmlAt .max .max -5 -5
+                , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                , C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ span
                         [ HA.style "margin-right" "5px" ]
