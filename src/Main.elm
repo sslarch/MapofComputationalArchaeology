@@ -1,7 +1,7 @@
 module Main exposing (..)
 
-import TeachingMaterialData exposing (teachingMaterialString)
 import MapOfComputionalArchaeology exposing (comparchmap)
+import TeachingMaterialData exposing (teachingMaterialString)
 
 import Bootstrap.CDN as CDN
 import Bootstrap.Grid as Grid
@@ -25,7 +25,8 @@ import Html as H exposing (Html, div, h1, input, text, button, p, br, span, a)
 import Html.Attributes as HA exposing (placeholder, style, href)
 import Html.Events as HE exposing (onInput)
 import List exposing (map)
-import String exposing (split)
+import Maybe.Extra exposing (values)
+import String exposing (trim, split)
 import Svg as S
 import Svg.Attributes as SA
 import Table exposing (defaultCustomizations)
@@ -215,9 +216,9 @@ view {  elements,
                 , CA.width 590
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
-                , CE.onClick OnMouseClick (CE.getWithin 15 CI.dots)
+                , CE.onClick OnMouseClick (CE.getWithin 20 CI.dots)
                 , CE.onMouseDown OnMouseDown CE.getOffset
-                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getWithin 15 CI.dots))
+                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getWithin 20 CI.dots))
                 , CE.on "mouseup" (CE.map2 OnMouseUp CE.getOffset CE.getCoords)
                 , CE.onMouseLeave OnMouseLeave
                 , CA.htmlAttrs
@@ -274,13 +275,35 @@ view {  elements,
                         C.amongst hovering (\_ ->
                             [ CA.border CA.orange, CA.size 3, CA.opacity 0, CA.borderWidth 2 ]
                         ) ] elements
-                , C.each hovering <| \p item -> [ C.tooltip item [ 
-                      CA.offset 0
-                    ] [] [
-                      case (findElementByCoordinates (CI.getX item) (CI.getY item)) of
-                        Nothing -> text ""
-                        Just x -> text (x.id ++ ": " ++ x.name)
-                    ] ]
+                , C.each hovering <| \p item -> 
+                    let curX = CI.getX item
+                        curY = CI.getY item
+                        curElem = findElementByCoordinates curX curY
+                    in [
+                      C.tooltip item [
+                          CA.offset 0
+                            ] [] [
+                              case curElem of
+                                Nothing -> text ""
+                                Just x -> text (x.id ++ ": " ++ x.name)
+                            ]
+                    -- lines to partner nodes
+                    , C.withPlane <| \p2 ->
+                        case curElem of
+                            Nothing -> []
+                            Just x ->
+                                let curPartners = values <| map findElementByID x.partner
+                                in map ( \partner ->
+                                    C.line
+                                      [ CA.x1 curX
+                                      , CA.x2 partner.x
+                                      , CA.y1 curY
+                                      , CA.y2 partner.y
+                                      , CA.dashed [ 5, 5 ]
+                                      , CA.color CA.red
+                                      ] 
+                                    ) curPartners
+                    ]
                 ]
 
         -- search/filter
@@ -461,7 +484,7 @@ view {  elements,
         -- main layout
         div [] [
             Grid.container [] [
-                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
@@ -524,6 +547,9 @@ view {  elements,
 
 type alias TeachingResource =
     { id : String
+    , partner : List String
+    , x : Float
+    , y : Float
     , name : String
     , author : List String
     , year : String
@@ -538,17 +564,18 @@ type alias TeachingResource =
     , tagsOpenArchaeo : List String
     , link : String
     , citation : String
-    , x : Float
-    , y : Float
     }
 
-decoder : Decoder TeachingResource
-decoder =
+decodeTeachingResource : Decoder TeachingResource
+decodeTeachingResource =
     let
-        decodeStringList = Decode.map (\s -> split "," s) Decode.string
+        decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
     in
         Decode.into TeachingResource
             |> Decode.pipeline (Decode.field "ID" Decode.string)
+            |> Decode.pipeline (Decode.field "Partner" decodeStringList)
+            |> Decode.pipeline (Decode.field "X_map" Decode.float)
+            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
             |> Decode.pipeline (Decode.field "Name" Decode.string)
             |> Decode.pipeline (Decode.field "Author" decodeStringList)
             |> Decode.pipeline (Decode.field "Year" Decode.string)
@@ -563,12 +590,10 @@ decoder =
             |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
             |> Decode.pipeline (Decode.field "Link" Decode.string)
             |> Decode.pipeline (Decode.field "Citation" Decode.string)
-            |> Decode.pipeline (Decode.field "X_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
 
 teachingResources : List TeachingResource
 teachingResources =
-    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decoder teachingMaterialString of
+    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
         Err x -> --let _ = Debug.log "Error when parsing input data" (Decode.errorToString x) -- for debugging of .tsv file
                  --in []
                  []
