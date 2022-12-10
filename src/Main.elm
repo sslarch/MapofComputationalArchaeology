@@ -212,8 +212,8 @@ view {  elements,
         -- map
         mapPlot = 
             C.chart
-                [ CA.height 294
-                , CA.width 590
+                [ CA.height 300
+                , CA.width 600
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
                 , CE.onClick OnMouseClick (CE.getWithin 20 CI.dots)
@@ -268,6 +268,12 @@ view {  elements,
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
                     ] ]
+                -- dummy data points at the four corners to get the scaling right
+                , C.series .x [
+                    C.scatter .y 
+                        [ CA.color CA.blue, CA.size 5, CA.square, CA.opacity 0] ]
+                            (List.map2 makeDummyResource [0, 0, 200, 200] [0, 100, 100, 0])
+                -- data points
                 , C.series .x [
                     C.scatter .y 
                         [ CA.color CA.red, CA.size 2, CA.square ] |>
@@ -572,6 +578,28 @@ type alias TeachingResource =
     , tagsOpenArchaeo : List String
     , link : String
     , citation : String
+    }
+
+makeDummyResource : Float -> Float -> TeachingResource
+makeDummyResource x y = {
+      id = ""
+    , partner = []
+    , x = x
+    , y = y
+    , name = ""
+    , author = []
+    , year = ""
+    , topic = ""
+    , language = ""
+    , programmingLanguage = []
+    , tools = []
+    , levelOfDifficulty = []
+    , description = ""
+    , materialType = ""
+    , tags = []
+    , tagsOpenArchaeo = []
+    , link = ""
+    , citation = ""
     }
 
 decodeTeachingResource : Decoder TeachingResource
