@@ -281,30 +281,38 @@ view {  elements,
                         curElem = findElementByCoordinates curX curY
                     in [
                       C.tooltip item [
-                          CA.offset 0
-                            ] [] [
+                            CA.offset 0
+                          , CA.background "#fcf9e9"
+                            ] [
+                            HA.style "opacity" "0.8"] [
                               case curElem of
                                 Nothing -> text ""
                                 Just x -> text (x.id ++ ": " ++ x.name)
                             ]
                     -- lines to partner nodes
-                    , C.withPlane <| \p2 ->
+                    , C.withPlane <| \_ ->
                         case curElem of
                             Nothing -> []
-                            Just x ->
-                                let curPartners = values <| map findElementByID x.partner
-                                in map ( \partner ->
-                                    C.line
-                                      [ CA.x1 curX
-                                      , CA.x2 partner.x
-                                      , CA.y1 curY
-                                      , CA.y2 partner.y
-                                      , CA.dashed [ 5, 5 ]
-                                      , CA.color CA.red
-                                      ] 
-                                    ) curPartners
+                            Just x -> addLinesCurElement x
                     ]
                 ]
+
+        addLinesCurElement : TeachingResource -> List (C.Element data msg)
+        addLinesCurElement elem =
+            let curPartners = values <| map findElementByID elem.partner
+            in case curPartners of
+                [] -> []
+                xs -> (map (makeOneLine elem) xs) ++ List.concatMap addLinesCurElement xs
+
+        makeOneLine : TeachingResource -> TeachingResource -> C.Element data msg
+        makeOneLine elem partner =
+            C.line [ CA.x1 elem.x
+                   , CA.x2 partner.x
+                   , CA.y1 elem.y
+                   , CA.y2 partner.y
+                   , CA.dashed [ 5, 5 ]
+                   , CA.color CA.red
+                   ]
 
         -- search/filter
         lowerNameQuery = String.toLower nameQuery
@@ -484,7 +492,7 @@ view {  elements,
         -- main layout
         div [] [
             Grid.container [] [
-                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
