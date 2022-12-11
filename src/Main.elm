@@ -119,7 +119,7 @@ update msg model =
     case msg of
         -- map
         OnMouseClick hovering ->
-          case (List.head hovering) of
+          case (List.head (filterHoveringToRealEntries hovering)) of
             Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
             Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
         OnMouseDown offset ->
@@ -186,6 +186,9 @@ update msg model =
         ShowModal element ->
             ( { model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none )
 
+filterHoveringToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
+filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
+
 -- VIEW
 
 view : Model -> Html Msg
@@ -224,7 +227,7 @@ view {  elements,
                 , CA.htmlAttrs
                     [ HA.style "user-select" "none"
                     , HA.style "cursor" <|
-                        case hovering of
+                        case (filterHoveringToRealEntries hovering) of
                             [] -> case dragging of
                                       CouldStillBeClick _ -> "grabbing"
                                       ForSureDragging _ -> "grabbing"
@@ -281,7 +284,7 @@ view {  elements,
                         C.amongst hovering (\_ ->
                             [ CA.border CA.orange, CA.size 3, CA.opacity 0, CA.borderWidth 2 ]
                         ) ] elements
-                , C.each hovering <| \p item -> 
+                , C.each (filterHoveringToRealEntries hovering) <| \p item -> 
                     let curX = CI.getX item
                         curY = CI.getY item
                         curElem = findElementByCoordinates curX curY
@@ -290,7 +293,8 @@ view {  elements,
                             CA.offset 0
                           , CA.background "#fcf9e9"
                             ] [
-                            HA.style "opacity" "0.8"] [
+                            HA.style "opacity" "0.8"
+                            ] [
                               case curElem of
                                 Nothing -> text ""
                                 Just x -> text (x.id ++ ": " ++ x.name)
@@ -514,7 +518,7 @@ view {  elements,
                     Grid.col [ ] [
                           br [] []
                         , div [] [
-                                span [ style "font-size" "35px" ] [ text "Computational archaeology teaching material list" ]
+                                span [ style "font-size" "30px" ] [ text "Computational archaeology teaching material list" ]
                               , span [ style "display" "inline-block", style "width" "20px" ] []
                               , text " a project by the "
                               , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
