@@ -270,6 +270,7 @@ view {  elements,
                         attribute "width" (String.fromFloat (600 * (percentage / 100)))
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
+                      --, attribute "opacity" "0.3" -- to set points
                     ] ]
                 -- dummy data points at the four corners to get the scaling right
                 , C.series .x [
