@@ -503,7 +503,7 @@ view {  elements,
         -- main layout
         div [] [
             Grid.container [] [
-                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
