@@ -12,6 +12,7 @@ import Bootstrap.Button as Button
 import Bootstrap.Utilities.Spacing as Spacing
 import Bootstrap.Modal as Modal
 import Browser
+import Browser.Events as E
 import Chart as C
 import Chart.Attributes as CA
 import Chart.Events as CE
@@ -38,13 +39,21 @@ main =
         { init = \() -> init []
         , update = update
         , view = view
-        , subscriptions = \_ -> Sub.none
+        , subscriptions = subscriptions
         }
+
+subscriptions : model -> Sub Msg
+subscriptions _ =
+    E.onResize (\w h -> SetWindowWidth w)
+
+breakWindowWidth : Int
+breakWindowWidth = 500 --px
 
 -- MODEL
 
 type alias Model =
-    { elements : List TeachingResource
+    { windowWidth : Int
+    , elements : List TeachingResource
     , tableState : Table.State
     , nameQuery : String
     , programmingLanguageQuery : String
@@ -69,7 +78,8 @@ init : List TeachingResource -> ( Model, Cmd Msg )
 init elements =
     let
         model =
-            { elements = teachingResources
+            { windowWidth = 800
+            , elements = teachingResources
             , tableState = Table.initialSort "ID"
             , nameQuery = ""
             , programmingLanguageQuery = ""
@@ -90,7 +100,9 @@ init elements =
 -- UPDATE
 
 type Msg
-    = SetNameQuery String
+    = SetWindowWidth Int
+    -- data/table
+    | SetNameQuery String
     | SetProgrammingLanguageQuery String
     | SetTagsQuery String
     | SetTableState Table.State
@@ -117,6 +129,7 @@ updateCenter center prevOffset offset =
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
+        SetWindowWidth w -> ({ model | windowWidth = w }, Cmd.none)
         -- map
         OnMouseClick hovering ->
           case (List.head (filterHoveringToRealEntries hovering)) of
@@ -192,7 +205,8 @@ filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
 -- VIEW
 
 view : Model -> Html Msg
-view {  elements,
+view {  windowWidth,
+        elements,
         tableState,
         nameQuery,
         programmingLanguageQuery,
@@ -444,14 +458,20 @@ view {  elements,
                 { toId = .id
                 , toMsg = SetTableState
                 , columns =
-                    [ 
+                    if windowWidth < breakWindowWidth then [ 
+                      idColumn "ID" .id
+                    , resourceColumn "Material" .year .name .author
+                    , linkAndModalColumn "" .link .id
+                    ] else [ 
                       idColumn "ID" .id
                     , resourceColumn "Material" .year .name .author
                     , stringListColumn "Language" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
-                , customizations = { defaultCustomizations | tableAttrs = [ style "width" "100%" ] }
+                , customizations = { defaultCustomizations | tableAttrs = [
+                    style "width" "100%"
+                    ] }
                 }
 
         -- modal
@@ -503,7 +523,7 @@ view {  elements,
         -- main layout
         div [] [
             Grid.container [] [
-                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
@@ -526,7 +546,7 @@ view {  elements,
                             ]
                         , Alert.simpleDark [] [
                             Grid.container [] [ 
-                                Grid.row [ Row.centerMd ] [
+                                Grid.row [ Row.centerMd ] ([
                                       Grid.col [] [
                                             div [ style "display" "inline-block", style "width" "100%" ] [
                                                   Icon.view Icon.filter
@@ -543,7 +563,14 @@ view {  elements,
                                             ]
                                         ]
                                     , Grid.colBreak []
-                                    , Grid.col [] [ 
+                                ] ++ if windowWidth < breakWindowWidth then [
+                                        Grid.col [] [ 
+                                              input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
+                                            , input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
+                                            , input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
+                                        ]
+                                    ] else [
+                                      Grid.col [] [ 
                                             input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
                                         ]
                                     , Grid.col [] [
@@ -552,7 +579,8 @@ view {  elements,
                                     , Grid.col [] [
                                             input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
                                         ]
-                                ]
+                                    ]
+                                )
                             ]
                         ]
                         , Table.view tableConfig tableState acceptableResources
