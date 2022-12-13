@@ -34,11 +34,21 @@ import Table exposing (defaultCustomizations)
 import Task
 import VirtualDom exposing (attribute)
 
+-- reactor is for the test environment with elm-reactor (open Reactor.elm!)
+reactor =
+    Browser.element
+        { init = \() -> init 500 []
+        , update = update
+        , view = view True -- devel mode = True
+        , subscriptions = subscriptions
+        }
+
+-- main is for production and deployment
 main =
     Browser.element
-        { init = \() -> init []
+        { init = \wW -> init wW []
         , update = update
-        , view = view
+        , view = view False -- devel mode = False
         , subscriptions = subscriptions
         }
 
@@ -74,11 +84,11 @@ type Dragging
   | ForSureDragging CS.Point
   | None
 
-init : List TeachingResource -> ( Model, Cmd Msg )
-init elements =
+init : Int -> List TeachingResource -> ( Model, Cmd Msg )
+init wW elements =
     let
         model =
-            { windowWidth = 800
+            { windowWidth = wW
             , elements = teachingResources
             , tableState = Table.initialSort "ID"
             , nameQuery = ""
@@ -204,8 +214,9 @@ filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
 
 -- VIEW
 
-view : Model -> Html Msg
-view {  windowWidth,
+view : Bool -> Model -> Html Msg
+view devel 
+    {   windowWidth,
         elements,
         tableState,
         nameQuery,
@@ -503,6 +514,11 @@ view {  windowWidth,
                         |> Modal.large
                         |> Modal.hideOnBackdropClick True
                         |> Modal.scrollableBody True
+                        --|> Modal.attrs [
+                        --        style "max-height" "calc(100vh - 10px)"
+                        --      , style "overflow-y" "auto"
+                        --      , style "-webkit-overflow-scrolling" "touch"
+                        --  ]
                         |> Modal.h3 [] [ text x.id ]
                         |> Modal.body [] [ 
                             Grid.containerFluid [ ] [
@@ -535,8 +551,8 @@ view {  windowWidth,
     in
         -- main layout
         div [] [
-            Grid.container [] [
-                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+            Grid.container [] 
+                ((if devel then [CDN.stylesheet] else []) ++ [
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
@@ -599,7 +615,7 @@ view {  windowWidth,
                         , Table.view tableConfig tableState acceptableResources
                         ]
                     ]
-                ]
+                ])
             , detailsModal
             ]
 
