@@ -289,7 +289,7 @@ view {  windowWidth,
                 -- dummy data points at the four corners to get the scaling right
                 , C.series .x [
                     C.scatter .y 
-                        [ CA.color CA.blue, CA.size 5, CA.square, CA.opacity 0] ]
+                        [ CA.opacity 0] ]
                             (List.map2 makeDummyResource [0, 0, 200, 200] [0, 100, 100, 0])
                 -- additional elements for each point
                 , C.each (filterHoveringToRealEntries hovering) <| \p item -> 
@@ -317,13 +317,18 @@ view {  windowWidth,
                 -- actual data points
                 , C.series .x [
                     C.scatter .y 
-                        [ CA.color CA.red, CA.size 2, CA.square ] |>
+                        [ CA.size 3
+                        , CA.diamond
+                        , CA.highlight 0.6
+                        , CA.highlightWidth 2
+                        , CA.highlightColor "white"
+                        ] |>
                         C.named "Teaching resource" |>
                         C.amongst hovering (\_ -> [ CA.size 15 ]) |>
                         C.variation (\i d -> [
                             CA.color (case d.levelOfDifficulty of
                                 Beginner -> CA.green
-                                Intermediate -> CA.blue
+                                Intermediate -> CA.yellow
                                 Advanced -> CA.red)
                         ])
                         ] elements
@@ -344,7 +349,7 @@ view {  windowWidth,
                    , CA.y2 partner.y
                    , CA.dashed [ 10, 5 ]
                    , CA.width 2
-                   , CA.color CA.darkYellow
+                   , CA.color "white"
                    ]
 
         -- search/filter
