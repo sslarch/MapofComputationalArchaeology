@@ -3,14 +3,14 @@ module Main exposing (..)
 import MapOfComputionalArchaeology exposing (comparchmap)
 import TeachingMaterialData exposing (teachingMaterialString)
 
-import Bootstrap.CDN as CDN
-import Bootstrap.Grid as Grid
-import Bootstrap.Grid.Row as Row
-import Bootstrap.Grid.Col as Col
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
-import Bootstrap.Utilities.Spacing as Spacing
+import Bootstrap.CDN as CDN
+import Bootstrap.Grid as Grid
+import Bootstrap.Grid.Col as Col
+import Bootstrap.Grid.Row as Row
 import Bootstrap.Modal as Modal
+import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Browser.Events as E
 import Chart as C
@@ -22,19 +22,21 @@ import Csv.Decode as Decode exposing (Decoder)
 import FontAwesome as Icon exposing (Icon)
 import FontAwesome.Solid as Icon
 import FontAwesome.Styles as Icon
-import Html as H exposing (Html, div, h1, input, text, button, p, br, span, a)
-import Html.Attributes as HA exposing (placeholder, style, href)
+import Html as H exposing (Html, a, br, button, div, h1, input, p, span, text)
+import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
 import List exposing (map)
 import Maybe.Extra exposing (values)
-import String exposing (trim, split)
+import String exposing (split, trim)
 import Svg as S
 import Svg.Attributes as SA
 import Table exposing (defaultCustomizations)
 import Task
 import VirtualDom exposing (attribute)
 
--- reactor is for the test environment with elm-reactor (open Reactor.elm!)
+-- MAIN
+
+-- for the test environment with elm-reactor (open Reactor.elm!)
 reactor =
     Browser.element
         { init = \() -> init 500 []
@@ -43,7 +45,7 @@ reactor =
         , subscriptions = subscriptions
         }
 
--- main is for production and deployment
+-- for production and deployment
 main =
     Browser.element
         { init = \wW -> init wW []
@@ -52,66 +54,157 @@ main =
         , subscriptions = subscriptions
         }
 
-subscriptions : model -> Sub Msg
-subscriptions _ =
-    E.onResize (\w h -> SetWindowWidth w)
-
-breakWindowWidth : Int
-breakWindowWidth = 500 --px
-
 -- MODEL
 
-type alias Model =
-    { windowWidth : Int
-    , elements : List TeachingResource
-    , tableState : Table.State
-    , nameQuery : String
-    , programmingLanguageQuery : String
-    , tagsQuery : String
-    -- mapZoom
-    , center : CS.Point
-    , dragging : Dragging
-    , percentage : Float
-    , hovering : List (CI.One TeachingResource CI.Dot)
-    , clickedElement : Maybe TeachingResource
+type alias Model = {
+      windowWidth               : Int
+    -- table and data
+    , elements                  : List TeachingResource
+    , tableState                : Table.State
+    , nameQuery                 : String
+    , programmingLanguageQuery  : String
+    , tagsQuery                 : String
+    -- map
+    , center                    : CS.Point
+    , dragging                  : Dragging
+    , percentage                : Float
+    , hovering                  : List (CI.One TeachingResource CI.Dot)
+    , clickedElement            : Maybe TeachingResource
     -- modal
-    , modalVisibility : Modal.Visibility
-    , selectedElement : Maybe TeachingResource
+    , modalVisibility           : Modal.Visibility
+    , selectedElement           : Maybe TeachingResource
     }
 
-type Dragging
-  = CouldStillBeClick CS.Point
+type Dragging =
+    CouldStillBeClick CS.Point
   | ForSureDragging CS.Point
   | None
 
+-- DATA
+
+type alias TeachingResource =
+    { id                        : String
+    , partner                   : List String
+    , x                         : Float
+    , y                         : Float
+    , name                      : String
+    , author                    : List String
+    , year                      : String
+    , topic                     : String
+    , language                  : String
+    , programmingLanguage       : List String
+    , tools                     : List String
+    , levelOfDifficulty         : Difficulty
+    , description               : String
+    , materialType              : String
+    , tags                      : List String
+    , tagsOpenArchaeo           : List String
+    , link                      : String
+    , citation                  : String
+    }
+
+type Difficulty =
+      Beginner
+    | Intermediate
+    | Advanced
+
+difficultyFromString : String -> Result String Difficulty
+difficultyFromString s = case s of
+    "beginner"      -> Ok Beginner
+    "intermediate"  -> Ok Intermediate
+    "advanced"      -> Ok Advanced
+    _               -> Err "invalid diffculty string"
+
+difficultyToString : Difficulty -> String
+difficultyToString d = case d of
+    Beginner        -> "beginner"
+    Intermediate    -> "intermediate"
+    Advanced        -> "advanced"
+
+makeDummyResource : Float -> Float -> TeachingResource
+makeDummyResource x y = {
+      id = ""
+    , partner = []
+    , x = x
+    , y = y
+    , name = ""
+    , author = []
+    , year = ""
+    , topic = ""
+    , language = ""
+    , programmingLanguage = []
+    , tools = []
+    , levelOfDifficulty = Beginner
+    , description = ""
+    , materialType = ""
+    , tags = []
+    , tagsOpenArchaeo = []
+    , link = ""
+    , citation = ""
+    }
+
+decodeTeachingResource : Decoder TeachingResource
+decodeTeachingResource =
+    let decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
+        decodeDifficulty = Decode.string |>
+                           Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
+    in Decode.into TeachingResource
+            |> Decode.pipeline (Decode.field "ID" Decode.string)
+            |> Decode.pipeline (Decode.field "Partner" decodeStringList)
+            |> Decode.pipeline (Decode.field "X_map" Decode.float)
+            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
+            |> Decode.pipeline (Decode.field "Name" Decode.string)
+            |> Decode.pipeline (Decode.field "Author" decodeStringList)
+            |> Decode.pipeline (Decode.field "Year" Decode.string)
+            |> Decode.pipeline (Decode.field "Topic" Decode.string)
+            |> Decode.pipeline (Decode.field "Language" Decode.string)
+            |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
+            |> Decode.pipeline (Decode.field "Tools" decodeStringList)
+            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
+            |> Decode.pipeline (Decode.field "Description" Decode.string)
+            |> Decode.pipeline (Decode.field "Material_type" Decode.string)
+            |> Decode.pipeline (Decode.field "Tags" decodeStringList)
+            |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
+            |> Decode.pipeline (Decode.field "Link" Decode.string)
+            |> Decode.pipeline (Decode.field "Citation" Decode.string)
+
+teachingResources : List TeachingResource
+teachingResources =
+    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
+        Err x -> -- for debugging of .tsv file and parsing
+                 --let _ = Debug.log "Parsing error" (Decode.errorToString x)
+                 --in []
+                 []
+        Ok x -> x
+
+-- INIT
+
 init : Int -> List TeachingResource -> ( Model, Cmd Msg )
 init wW elements =
-    let
-        model =
-            { windowWidth = wW
-            , elements = teachingResources
-            , tableState = Table.initialSort "ID"
-            , nameQuery = ""
-            , programmingLanguageQuery = ""
-            , tagsQuery = ""
-            -- mapZoom
-            , center = { x = 100, y = 50 }
-            , dragging = None
-            , percentage = 100
-            , hovering = []
-            , clickedElement = Nothing
-            -- modal
-            , modalVisibility = Modal.hidden
-            , selectedElement = Nothing
-            }
-    in
-        ( model, Cmd.none )
+    let model = { windowWidth = wW
+                -- table and data
+                , elements = teachingResources
+                , tableState = Table.initialSort "ID"
+                , nameQuery = ""
+                , programmingLanguageQuery = ""
+                , tagsQuery = ""
+                -- map
+                , center = { x = 100, y = 50 }
+                , dragging = None
+                , percentage = 100
+                , hovering = []
+                , clickedElement = Nothing
+                -- modal
+                , modalVisibility = Modal.hidden
+                , selectedElement = Nothing
+                }
+    in ( model, Cmd.none )
 
 -- UPDATE
 
-type Msg
-    = SetWindowWidth Int
-    -- data/table
+type Msg =
+      SetWindowWidth Int
+    -- table and data
     | SetNameQuery String
     | SetProgrammingLanguageQuery String
     | SetTagsQuery String
@@ -130,87 +223,80 @@ type Msg
     | CloseModal
     | ShowModal (Maybe TeachingResource)
 
-updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
-updateCenter center prevOffset offset =
-  { x = center.x + (prevOffset.x - offset.x)
-  , y = center.y + (prevOffset.y - offset.y)
-  }
-
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
-        SetWindowWidth w -> ({ model | windowWidth = w }, Cmd.none)
+        SetWindowWidth w ->
+            ({ model | windowWidth = w }, Cmd.none)
         -- map
         OnMouseClick hovering ->
-          case (List.head (filterHoveringToRealEntries hovering)) of
-            Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
-            Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
+            case (List.head (filterHoveringToRealEntries hovering)) of
+                Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
+                Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
         OnMouseDown offset ->
-          ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
+            ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
         OnMouseMove offset hovering ->
-          case model.dragging of
-            CouldStillBeClick prevOffset ->
-              if prevOffset == offset then
-                ({ model | hovering = hovering }, Cmd.none)
-              else
-                ( { model | center = updateCenter model.center prevOffset offset
-                , dragging = ForSureDragging offset
-                , hovering = hovering
-                }, Cmd.none )
-            ForSureDragging prevOffset ->
-              ( { model | center = updateCenter model.center prevOffset offset
-              , dragging = ForSureDragging offset
-              , hovering = hovering
-              }, Cmd.none )
-            None ->
-              ({ model | hovering = hovering }, Cmd.none)
+            case model.dragging of
+                CouldStillBeClick prevOffset ->
+                    if prevOffset == offset then
+                        ({ model | hovering = hovering }, Cmd.none)
+                    else
+                        ({ model | center = updateCenter model.center prevOffset offset
+                         , dragging = ForSureDragging offset
+                         , hovering = hovering
+                         }, Cmd.none)
+                ForSureDragging prevOffset ->
+                      ({ model | center = updateCenter model.center prevOffset offset
+                      , dragging = ForSureDragging offset
+                      , hovering = hovering
+                      }, Cmd.none)
+                None ->
+                    ({ model | hovering = hovering }, Cmd.none)
         OnMouseUp offset coord ->
-          case model.dragging of
-            CouldStillBeClick prevOffset ->
-              ({ model | dragging = None }, Cmd.none)
-            ForSureDragging prevOffset ->
-              ( { model | center = updateCenter model.center prevOffset offset
-              , dragging = None
-              }, Cmd.none )
-            None ->
-              (model, Cmd.none)
+            case model.dragging of
+                CouldStillBeClick prevOffset ->
+                    ({ model | dragging = None }, Cmd.none)
+                ForSureDragging prevOffset ->
+                    ({ model | center = updateCenter model.center prevOffset offset
+                     , dragging = None
+                     }, Cmd.none)
+                None ->
+                    (model, Cmd.none)
         OnMouseLeave ->
-          ({ model | dragging = None, hovering = [] }, Cmd.none)
+            ({ model | dragging = None, hovering = [] }, Cmd.none)
         OnZoomIn ->
-          ({ model | percentage = model.percentage + 20 }, Cmd.none)
+            ({ model | percentage = model.percentage + 20 }, Cmd.none)
         OnZoomOut ->
-          ({ model | percentage = max 1 (model.percentage - 20) }, Cmd.none)
+            ({ model | percentage = max 1 (model.percentage - 20) }, Cmd.none)
         OnZoomReset ->
-          ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
-        -- table
+            ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
+        -- table and data
         SetNameQuery newQuery ->
-            ( { model | nameQuery = newQuery }
-            , Cmd.none )
+            ({ model | nameQuery = newQuery }, Cmd.none)
         SetProgrammingLanguageQuery newQuery ->
-            ( { model | programmingLanguageQuery = newQuery }
-            , Cmd.none )
+            ({ model | programmingLanguageQuery = newQuery }, Cmd.none)
         SetTagsQuery newQuery ->
-            ( { model | tagsQuery = newQuery }
-            , Cmd.none )
+            ({ model | tagsQuery = newQuery }, Cmd.none)
         SetTableState newState ->
-            ( { model | tableState = newState }
-            , Cmd.none )
+            ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
-            ( { model |
-                  nameQuery = ""
-                , programmingLanguageQuery = ""
-                , tagsQuery = ""
-                , clickedElement = Nothing
-              }
-            , Cmd.none )
+            ({ model |
+               nameQuery = ""
+             , programmingLanguageQuery = ""
+             , tagsQuery = ""
+             , clickedElement = Nothing
+             }, Cmd.none)
         -- modal
         CloseModal ->
-            ( { model | modalVisibility = Modal.hidden } , Cmd.none )
+            ({ model | modalVisibility = Modal.hidden } , Cmd.none)
         ShowModal element ->
-            ( { model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none )
+            ({ model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none)
 
-filterHoveringToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
-filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
+updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
+updateCenter center prevOffset offset = {
+    x = center.x + (prevOffset.x - offset.x)
+  , y = center.y + (prevOffset.y - offset.y)
+  }
 
 -- VIEW
 
@@ -231,7 +317,9 @@ view devel
         selectedElement
     } =
     let
-        -- helpers
+        -- general helper functions and settings
+        breakWindowWidth : Int
+        breakWindowWidth = 500 --px
         findElementByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
         findElementByID i =
@@ -240,6 +328,7 @@ view devel
         -- map
         mapPlot = 
             C.chart
+                -- general settings
                 [ CA.height 300
                 , CA.width 600
                 , CA.range [ CA.zoom percentage, CA.centerAt center.x ]
@@ -260,12 +349,13 @@ view devel
                             _ -> "pointer"
                     ]
                 ]
-                [ 
-                  -- uncomment to get a coordinate grid
+                [
+                -- comment to hide coordinate grid
                   C.xLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.yLabels [ CA.withGrid, CA.amount 10, CA.ints, CA.fontSize 9 ]
                 , C.xTicks [ CA.withGrid, CA.amount 10, CA.ints ]
                 , C.yTicks [ CA.withGrid, CA.amount 10, CA.ints ]
+                -- zoom buttons in top right corner
                 , C.htmlAt .max .max -5 -5
                     [ HA.style "transform" "translateX(-100%)" ]
                     [ span
@@ -295,9 +385,9 @@ view devel
                         attribute "width" (String.fromFloat (600 * (percentage / 100)))
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
                       , attribute "viewBox" ("0 0 2000 1000")
-                      --, attribute "opacity" "0.3" -- to set points
+                      --, attribute "opacity" "0.3" -- make transparent to set coordinates more easily
                     ] ]
-                -- dummy data points at the four corners to get the scaling right
+                -- invisible dummy data points at the four corners to make the plot scale correctly
                 , C.series .x [
                     C.scatter .y 
                         [ CA.opacity 0] ]
@@ -336,15 +426,17 @@ view devel
                         ] |>
                         C.named "Teaching resource" |>
                         C.amongst hovering (\_ -> [ CA.size 15 ]) |>
+                        -- color by difficulty level
                         C.variation (\i d -> [
                             CA.color (case d.levelOfDifficulty of
                                 Beginner -> CA.green
                                 Intermediate -> CA.yellow
                                 Advanced -> CA.red)
                         ])
-                        ] elements
+                        ] elements -- actual input data
                 ]
 
+        -- plot helper functions
         addLinesCurElement : TeachingResource -> List (C.Element data msg)
         addLinesCurElement elem =
             let curPartners = values <| map findElementByID elem.partner
@@ -363,7 +455,7 @@ view devel
                    , CA.color "white"
                    ]
 
-        -- search/filter
+        -- search/filter logic
         lowerNameQuery = String.toLower nameQuery
         lowerProgrammingQuery = String.toLower programmingLanguageQuery
         lowerTagsQuery = String.toLower tagsQuery
@@ -379,7 +471,6 @@ view devel
                         )
                     ) elements
                 Just x -> [x]
-
 
         -- table
         idColumn : String -> (data -> String) -> Table.Column data msg
@@ -430,8 +521,7 @@ view devel
                     Nothing -> ""
                     Just a ->  if moreThanOneAuthor then (a ++ " et al.") else a
 
-        badgeStyle = 
-            [ 
+        badgeStyle = [
               style "display" "inline-block"
             , style "color" "white"
             , style "padding" "1px 4px"
@@ -478,8 +568,8 @@ view devel
 
         tableConfig : Table.Config TeachingResource Msg
         tableConfig =
-            Table.customConfig
-                { toId = .id
+            Table.customConfig {
+                  toId = .id
                 , toMsg = SetTableState
                 , columns =
                     if windowWidth < breakWindowWidth then [ 
@@ -493,13 +583,16 @@ view devel
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
-                , customizations = { defaultCustomizations | tableAttrs = [
-                    style "width" "100%"
-                    ] }
+                , customizations = { defaultCustomizations | tableAttrs = [ style "width" "100%" ] }
                 }
 
         -- modal
-        oneRow name value = Grid.row [ ] [ Grid.col [ Col.sm3 ] [ span [ style "font-weight" "bold" ] [ text name ] ] , Grid.col [ Col.sm9 ] [ text value ] ]
+        oneRow name value =
+            Grid.row [ ] [
+                  Grid.col [ Col.sm3 ]
+                    [ span [ style "font-weight" "bold" ] [ text name ] ]
+                , Grid.col [ Col.sm9 ] [ text value ]
+            ]
 
         detailsModal =
             case selectedElement of
@@ -514,11 +607,6 @@ view devel
                         |> Modal.large
                         |> Modal.hideOnBackdropClick True
                         |> Modal.scrollableBody True
-                        --|> Modal.attrs [
-                        --        style "max-height" "calc(100vh - 10px)"
-                        --      , style "overflow-y" "auto"
-                        --      , style "-webkit-overflow-scrolling" "touch"
-                        --  ]
                         |> Modal.h3 [] [ text x.id ]
                         |> Modal.body [] [ 
                             Grid.containerFluid [ ] [
@@ -547,13 +635,17 @@ view devel
                             ]
                         |> Modal.view modalVisibility
 
+        -- layout helper functions
+        query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
+        query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
+        query3 = input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
 
     in
         -- main layout
         div [] [
             Grid.container [] 
-                ((if devel then [CDN.stylesheet] else []) ++ [
-                  Icon.css -- Fontawesome
+                ((if devel then [CDN.stylesheet] else []) ++ [ -- stylesheet for production is loaded in index.html
+                  Icon.css -- fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
                           div [ 
@@ -575,8 +667,9 @@ view devel
                             ]
                         , Alert.simpleDark [] [
                             Grid.container [] [ 
-                                Grid.row [ Row.centerMd ] ([
-                                      Grid.col [] [
+                                Grid.row [ Row.centerMd ] (
+                                    [
+                                        Grid.col [] [
                                             div [ style "display" "inline-block", style "width" "100%" ] [
                                                   Icon.view Icon.filter
                                                 , text <| " Filter the list (" ++ 
@@ -592,22 +685,12 @@ view devel
                                             ]
                                         ]
                                     , Grid.colBreak []
-                                ] ++ if windowWidth < breakWindowWidth then [
-                                        Grid.col [] [ 
-                                              input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
-                                            , input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
-                                            , input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
-                                        ]
+                                    ] ++ if windowWidth < breakWindowWidth then [
+                                        Grid.col [] [ query1, query2, query3 ]
                                     ] else [
-                                      Grid.col [] [ 
-                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] [] 
-                                        ]
-                                    , Grid.col [] [
-                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
-                                        ]
-                                    , Grid.col [] [
-                                            input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
-                                        ]
+                                      Grid.col [] [ query1 ]
+                                    , Grid.col [] [ query2 ]
+                                    , Grid.col [] [ query3 ]
                                     ]
                                 )
                             ]
@@ -619,96 +702,11 @@ view devel
             , detailsModal
             ]
 
--- DATA
+filterHoveringToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
+filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
 
-type alias TeachingResource =
-    { id : String
-    , partner : List String
-    , x : Float
-    , y : Float
-    , name : String
-    , author : List String
-    , year : String
-    , topic : String
-    , language : String
-    , programmingLanguage : List String
-    , tools : List String
-    , levelOfDifficulty : Difficulty
-    , description : String
-    , materialType : String
-    , tags : List String
-    , tagsOpenArchaeo : List String
-    , link : String
-    , citation : String
-    }
+-- SUBSCRIPTIONS
 
-type Difficulty = Beginner | Intermediate | Advanced
-
-difficultyFromString : String -> Result String Difficulty
-difficultyFromString s = case s of
-    "beginner" -> Ok Beginner
-    "intermediate" -> Ok Intermediate
-    "advanced" -> Ok Advanced
-    _ -> Err "invalid diffculty string"
-
-difficultyToString : Difficulty -> String
-difficultyToString d = case d of
-    Beginner -> "beginner"
-    Intermediate -> "intermediate"
-    Advanced -> "advanced"
-
-makeDummyResource : Float -> Float -> TeachingResource
-makeDummyResource x y = {
-      id = ""
-    , partner = []
-    , x = x
-    , y = y
-    , name = ""
-    , author = []
-    , year = ""
-    , topic = ""
-    , language = ""
-    , programmingLanguage = []
-    , tools = []
-    , levelOfDifficulty = Beginner
-    , description = ""
-    , materialType = ""
-    , tags = []
-    , tagsOpenArchaeo = []
-    , link = ""
-    , citation = ""
-    }
-
-decodeTeachingResource : Decoder TeachingResource
-decodeTeachingResource =
-    let
-        decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
-        decodeDifficulty = Decode.string |> Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
-    in
-        Decode.into TeachingResource
-            |> Decode.pipeline (Decode.field "ID" Decode.string)
-            |> Decode.pipeline (Decode.field "Partner" decodeStringList)
-            |> Decode.pipeline (Decode.field "X_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Name" Decode.string)
-            |> Decode.pipeline (Decode.field "Author" decodeStringList)
-            |> Decode.pipeline (Decode.field "Year" Decode.string)
-            |> Decode.pipeline (Decode.field "Topic" Decode.string)
-            |> Decode.pipeline (Decode.field "Language" Decode.string)
-            |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
-            |> Decode.pipeline (Decode.field "Tools" decodeStringList)
-            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
-            |> Decode.pipeline (Decode.field "Description" Decode.string)
-            |> Decode.pipeline (Decode.field "Material_type" Decode.string)
-            |> Decode.pipeline (Decode.field "Tags" decodeStringList)
-            |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
-            |> Decode.pipeline (Decode.field "Link" Decode.string)
-            |> Decode.pipeline (Decode.field "Citation" Decode.string)
-
-teachingResources : List TeachingResource
-teachingResources =
-    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
-        Err x -> --let _ = Debug.log "Error when parsing input data" (Decode.errorToString x) -- for debugging of .tsv file
-                 --in []
-                 []
-        Ok x -> x
+subscriptions : model -> Sub Msg
+subscriptions _ =
+    E.onResize (\w h -> SetWindowWidth w)
