@@ -279,7 +279,7 @@ view {  windowWidth,
                         ]
                         [ text "⨯" ]
                     ]
-
+                -- background map
                 , C.svgAt (\_ -> 0) (\_ -> 100) 0 0 [ comparchmap [
                         attribute "width" (String.fromFloat (600 * (percentage / 100)))
                       , attribute "height" (String.fromFloat (300 * (percentage / 100)))
@@ -291,20 +291,14 @@ view {  windowWidth,
                     C.scatter .y 
                         [ CA.color CA.blue, CA.size 5, CA.square, CA.opacity 0] ]
                             (List.map2 makeDummyResource [0, 0, 200, 200] [0, 100, 100, 0])
-                -- data points
-                , C.series .x [
-                    C.scatter .y 
-                        [ CA.color CA.red, CA.size 2, CA.square ] |>
-                        C.named "Teaching resource" |>
-                        C.amongst hovering (\_ ->
-                            [ CA.border CA.orange, CA.size 3, CA.opacity 0, CA.borderWidth 2 ]
-                        ) ] elements
+                -- additional elements for each point
                 , C.each (filterHoveringToRealEntries hovering) <| \p item -> 
                     let curX = CI.getX item
                         curY = CI.getY item
                         curElem = findElementByCoordinates curX curY
                     in [
-                      C.tooltip item [
+                        -- tooltip
+                        C.tooltip item [
                             CA.offset 0
                           , CA.background "#fcf9e9"
                             ] [
@@ -314,12 +308,25 @@ view {  windowWidth,
                                 Nothing -> text ""
                                 Just x -> text (x.id ++ ": " ++ x.name)
                             ]
-                    -- lines to partner nodes
-                    , C.withPlane <| \_ ->
-                        case curElem of
-                            Nothing -> []
-                            Just x -> addLinesCurElement x
+                        -- lines to partner nodes
+                        , C.withPlane <| \_ ->
+                            case curElem of
+                                Nothing -> []
+                                Just x -> addLinesCurElement x
                     ]
+                -- actual data points
+                , C.series .x [
+                    C.scatter .y 
+                        [ CA.color CA.red, CA.size 2, CA.square ] |>
+                        C.named "Teaching resource" |>
+                        C.amongst hovering (\_ -> [ CA.size 15 ]) |>
+                        C.variation (\i d -> [
+                            CA.color (case d.levelOfDifficulty of
+                                Beginner -> CA.green
+                                Intermediate -> CA.blue
+                                Advanced -> CA.red)
+                        ])
+                        ] elements
                 ]
 
         addLinesCurElement : TeachingResource -> List (C.Element data msg)
@@ -335,8 +342,9 @@ view {  windowWidth,
                    , CA.x2 partner.x
                    , CA.y1 elem.y
                    , CA.y2 partner.y
-                   , CA.dashed [ 5, 5 ]
-                   , CA.color CA.red
+                   , CA.dashed [ 10, 5 ]
+                   , CA.width 2
+                   , CA.color CA.darkYellow
                    ]
 
         -- search/filter
@@ -501,7 +509,7 @@ view {  windowWidth,
                                 , oneRow "Language: "         x.language
                                 , oneRow "Prog. language: "   <| String.join ", " x.programmingLanguage
                                 , oneRow "Tools: "            <| String.join ", " x.tools
-                                , oneRow "Level: "            <| String.join ", " x.levelOfDifficulty
+                                , oneRow "Level: "            <| difficultyToString x.levelOfDifficulty
                                 , oneRow "Material type: "    x.materialType
                                 , oneRow "Tags: "             <| String.join ", " x.tags
                                 , oneRow "Tags OpenArchaeo: " <| String.join ", " x.tagsOpenArchaeo
@@ -523,7 +531,7 @@ view {  windowWidth,
         -- main layout
         div [] [
             Grid.container [] [
-                  --CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
+                  CDN.stylesheet, -- Don't use this method when you want to deploy your app for real life usage. http://elm-bootstrap.info/getting-started
                   Icon.css -- Fontawesome
                 , Grid.row [] [
                       Grid.col [ ] [
@@ -604,7 +612,7 @@ type alias TeachingResource =
     , language : String
     , programmingLanguage : List String
     , tools : List String
-    , levelOfDifficulty : List String
+    , levelOfDifficulty : Difficulty
     , description : String
     , materialType : String
     , tags : List String
@@ -612,6 +620,21 @@ type alias TeachingResource =
     , link : String
     , citation : String
     }
+
+type Difficulty = Beginner | Intermediate | Advanced
+
+difficultyFromString : String -> Result String Difficulty
+difficultyFromString s = case s of
+    "beginner" -> Ok Beginner
+    "intermediate" -> Ok Intermediate
+    "advanced" -> Ok Advanced
+    _ -> Err "invalid diffculty string"
+
+difficultyToString : Difficulty -> String
+difficultyToString d = case d of
+    Beginner -> "beginner"
+    Intermediate -> "intermediate"
+    Advanced -> "advanced"
 
 makeDummyResource : Float -> Float -> TeachingResource
 makeDummyResource x y = {
@@ -626,7 +649,7 @@ makeDummyResource x y = {
     , language = ""
     , programmingLanguage = []
     , tools = []
-    , levelOfDifficulty = []
+    , levelOfDifficulty = Beginner
     , description = ""
     , materialType = ""
     , tags = []
@@ -639,6 +662,7 @@ decodeTeachingResource : Decoder TeachingResource
 decodeTeachingResource =
     let
         decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
+        decodeDifficulty = Decode.string |> Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
     in
         Decode.into TeachingResource
             |> Decode.pipeline (Decode.field "ID" Decode.string)
@@ -652,7 +676,7 @@ decodeTeachingResource =
             |> Decode.pipeline (Decode.field "Language" Decode.string)
             |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
             |> Decode.pipeline (Decode.field "Tools" decodeStringList)
-            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeStringList)
+            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
             |> Decode.pipeline (Decode.field "Description" Decode.string)
             |> Decode.pipeline (Decode.field "Material_type" Decode.string)
             |> Decode.pipeline (Decode.field "Tags" decodeStringList)
