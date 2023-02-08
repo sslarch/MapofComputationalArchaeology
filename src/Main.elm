@@ -73,6 +73,8 @@ type alias Model = {
     -- modal
     , modalVisibility           : Modal.Visibility
     , selectedElement           : Maybe TeachingResource
+    -- welcome
+    , welcomeVisibility         : Modal.Visibility
     }
 
 type Dragging =
@@ -197,6 +199,8 @@ init wW elements =
                 -- modal
                 , modalVisibility = Modal.hidden
                 , selectedElement = Nothing
+                -- welcome
+                , welcomeVisibility = Modal.shown
                 }
     in ( model, Cmd.none )
 
@@ -222,6 +226,8 @@ type Msg =
     -- modal
     | CloseModal
     | ShowModal (Maybe TeachingResource)
+    -- welcome
+    | CloseWelcome
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
@@ -291,6 +297,9 @@ update msg model =
             ({ model | modalVisibility = Modal.hidden } , Cmd.none)
         ShowModal element ->
             ({ model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none)
+        -- welcome
+        CloseWelcome ->
+            ({ model | welcomeVisibility = Modal.hidden } , Cmd.none)
 
 updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
 updateCenter center prevOffset offset = {
@@ -314,7 +323,8 @@ view devel
         hovering,
         clickedElement,
         modalVisibility,
-        selectedElement
+        selectedElement,
+        welcomeVisibility
     } =
     let
         -- general helper functions and settings
@@ -635,6 +645,44 @@ view devel
                             ]
                         |> Modal.view modalVisibility
 
+        -- welcome
+        detailsWelcome =
+            Modal.config CloseWelcome
+                |> Modal.large
+                |> Modal.hideOnBackdropClick True
+                |> Modal.h4 [] [ text "The Map of Computational Archaeology" ]
+                |> Modal.body [] [
+                    p [] [ text <| "Computational Archaeology is a wondrous field. "
+                           ++ "To make it a bit easier to explore and navigate, this webapp "
+                           ++ "presents an imaginary map with a collection of teaching material "
+                           ++ "introducing the different domains of computer applications in archaeology."
+                         ],
+                    p [] [ text <| "The interactive map on the top shows the various "
+                           ++ "subfields as landmasses of an imaginary world. "
+                           ++ "Each dot represents a teaching resource (e.g. a blogpost, "
+                           ++ "a video-tutorial or a textbook). The dot color indicates, "
+                           ++ "how advanced and challenging a given unit is:"
+                         ],
+                    p [] [ span [ style "color" "#71C614" ] [ text "Suitable for beginners" ],
+                           text " -> ",
+                           span [ style "color" "#FFCA00" ] [ text "Intermediate" ],
+                           text " -> ",
+                           span [ style "color" "#EF3159" ] [ text "Advanced" ]
+                         ],
+                    p [] [ text <| "You can hover or click on the dots to get more information. "
+                           ++ "Click ",
+                           span [ style "color" "#EF3159" ] [ text "Clear filters" ],
+                           text <| " to reset the list below the map."
+                         ]
+                ]
+                |> Modal.footer [] [ span [ style "font-style" "italic" ] [
+                                text "Made by the "
+                              , a [ href "https://sslarch.github.io" ] [ text "SIG for Scripting languages in Archaeology" ]
+                              , text " - see the code on "
+                              , a [ href "https://github.com/sslarch/MapofComputationalArchaeology" ] [ text "Github" ]
+                              ] ]
+                |> Modal.view welcomeVisibility
+
         -- layout helper functions
         query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
         query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
@@ -699,7 +747,7 @@ view devel
                         ]
                     ]
                 ])
-            , detailsModal
+            , detailsModal, detailsWelcome
             ]
 
 filterHoveringToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
