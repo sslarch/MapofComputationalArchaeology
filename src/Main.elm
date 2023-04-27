@@ -486,7 +486,7 @@ view devel
                 Just x -> [x]
 
         -- table
-        idColumn : String -> (data -> String) -> Table.Column data msg
+        idColumn : String -> (data -> String) -> Table.Column data Msg
         idColumn colName toString =
           Table.veryCustomColumn
             { name = colName
@@ -500,7 +500,7 @@ view devel
             , sorter = Table.increasingOrDecreasingBy toString
             }
 
-        resourceColumn : String -> (data -> String) -> (data -> String) -> (data -> List String) -> Table.Column data msg
+        resourceColumn : String -> (data -> String) -> (data -> String) -> (data -> List String) -> Table.Column data Msg
         resourceColumn colName getYear getName getAuthors =
           Table.veryCustomColumn
             { name = colName
@@ -544,15 +544,23 @@ view devel
             , style "font-size" "15px"
             ]
 
-        viewProgrammingLanguage : List String -> Table.HtmlDetails msg
+        viewProgrammingLanguage : List String -> Table.HtmlDetails Msg
         viewProgrammingLanguage ss =
-            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
+            --Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
+            Table.HtmlDetails [] (map (\s -> 
+                        Button.button
+                        [ Button.attrs [ HE.onClick OnZoomIn, Spacing.ml1 ]
+                        , Button.outlineSecondary
+                        , Button.small
+                        ]
+                        [ text s ]) ss)
 
-        viewTags : List String -> Table.HtmlDetails msg
+
+        viewTags : List String -> Table.HtmlDetails Msg
         viewTags ss =
             Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
 
-        stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails msg) -> Table.Column data msg
+        stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails Msg) -> Table.Column data Msg
         stringListColumn colName toStringList viewFunction =
           Table.veryCustomColumn
             { name = colName
