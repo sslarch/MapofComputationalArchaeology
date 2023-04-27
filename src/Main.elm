@@ -94,7 +94,7 @@ type alias TeachingResource =
     , year                      : String
     , topic                     : String
     , language                  : String
-    , programmingLanguage       : List String
+    , programmingLanguage       : List (ProgrammingLanguage)
     , tools                     : List String
     , levelOfDifficulty         : Difficulty
     , description               : String
@@ -104,6 +104,8 @@ type alias TeachingResource =
     , link                      : String
     , citation                  : String
     }
+
+type alias ProgrammingLanguage = { name : String }
 
 type Difficulty =
       Beginner
@@ -148,6 +150,7 @@ makeDummyResource x y = {
 decodeTeachingResource : Decoder TeachingResource
 decodeTeachingResource =
     let decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
+        decodeProgrammingLanguageList = decodeStringList |> Decode.map (List.map ProgrammingLanguage)
         decodeDifficulty = Decode.string |>
                            Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
     in Decode.into TeachingResource
@@ -160,7 +163,7 @@ decodeTeachingResource =
             |> Decode.pipeline (Decode.field "Year" Decode.string)
             |> Decode.pipeline (Decode.field "Topic" Decode.string)
             |> Decode.pipeline (Decode.field "Language" Decode.string)
-            |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
+            |> Decode.pipeline (Decode.field "Programming_language" decodeProgrammingLanguageList)
             |> Decode.pipeline (Decode.field "Tools" decodeStringList)
             |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
             |> Decode.pipeline (Decode.field "Description" Decode.string)
@@ -475,7 +478,7 @@ view devel
                     (\x ->
                         let 
                             matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
-                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
+                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| List.map (\l -> l.name) <| x.programmingLanguage
                             matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
                         in matchName && matchProg && matchTag
                         )
@@ -589,7 +592,7 @@ view devel
                     ] else [ 
                       idColumn "ID" .id
                     , resourceColumn "Material" .year .name .author
-                    , stringListColumn "Language" .programmingLanguage viewProgrammingLanguage
+                    , stringListColumn "Language" (\data -> List.map (\l -> l.name) data.programmingLanguage) viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
@@ -626,7 +629,7 @@ view devel
                                 , oneRow "Topic: "            x.topic
                                 , oneRow "Description: "      x.description
                                 , oneRow "Language: "         x.language
-                                , oneRow "Prog. language: "   <| String.join ", " x.programmingLanguage
+                                , oneRow "Prog. language: "   <| String.join ", " <| List.map (\l -> l.name) x.programmingLanguage
                                 , oneRow "Tools: "            <| String.join ", " x.tools
                                 , oneRow "Level: "            <| difficultyToString x.levelOfDifficulty
                                 , oneRow "Material type: "    x.materialType
