@@ -63,9 +63,7 @@ type alias Model = {
     -- table and data
     , elements                  : List TeachingResource
     , tableState                : Table.State
-    , nameQuery                 : String
-    , programmingLanguageQuery  : String
-    , tagsQuery                 : List String
+    , multiQueryContent         : List String
     , multiQuery                : QueryModel
     -- map
     , center                    : CS.Point
@@ -112,7 +110,7 @@ type alias TeachingResource =
     , year                      : String
     , topic                     : String
     , language                  : String
-    , programmingLanguage       : List (ProgrammingLanguage)
+    , programmingLanguage       : List String
     , tools                     : List String
     , levelOfDifficulty         : Difficulty
     , description               : String
@@ -122,8 +120,6 @@ type alias TeachingResource =
     , link                      : String
     , citation                  : String
     }
-
-type alias ProgrammingLanguage = { name : String }
 
 type Difficulty =
       Beginner
@@ -168,7 +164,7 @@ makeDummyResource x y = {
 decodeTeachingResource : Decoder TeachingResource
 decodeTeachingResource =
     let decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
-        decodeProgrammingLanguageList = decodeStringList |> Decode.map (List.map ProgrammingLanguage)
+        decodeStringListLower = decodeStringList |> Decode.map (List.map String.toLower)
         decodeDifficulty = Decode.string |>
                            Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
     in Decode.into TeachingResource
@@ -181,12 +177,12 @@ decodeTeachingResource =
             |> Decode.pipeline (Decode.field "Year" Decode.string)
             |> Decode.pipeline (Decode.field "Topic" Decode.string)
             |> Decode.pipeline (Decode.field "Language" Decode.string)
-            |> Decode.pipeline (Decode.field "Programming_language" decodeProgrammingLanguageList)
+            |> Decode.pipeline (Decode.field "Programming_language" decodeStringListLower)
             |> Decode.pipeline (Decode.field "Tools" decodeStringList)
             |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
             |> Decode.pipeline (Decode.field "Description" Decode.string)
             |> Decode.pipeline (Decode.field "Material_type" Decode.string)
-            |> Decode.pipeline (Decode.field "Tags" decodeStringList)
+            |> Decode.pipeline (Decode.field "Tags" decodeStringListLower)
             |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
             |> Decode.pipeline (Decode.field "Link" Decode.string)
             |> Decode.pipeline (Decode.field "Citation" Decode.string)
@@ -208,26 +204,25 @@ init wW elements =
                 -- table and data
                 , elements = teachingResources
                 , tableState = Table.initialSort "ID"
-                , nameQuery = ""
-                , programmingLanguageQuery = ""
-                , tagsQuery = [ ]
+                , multiQueryContent = [ ]
                 , multiQuery = {
                     id = "exampleMulti"
-                  , available = map .tags teachingResources |> concat |> sort
+                  , available = (map .tags teachingResources |> concat) ++ (map .programmingLanguage teachingResources |> concat) |> sort
                   , itemToLabel = identity
                   , selected = [ ]
                   , selectState = Select.init ""
                   , selectConfig = Select.newConfig
                         { onSelect = OnSelect
                         , toLabel = identity
-                        , filter = filter 2 identity
+                        , filter = filter 0 identity
                         , toMsg = SelectMsg
                         }
                         |> Select.withMultiSelection True
+                        |> Select.withCustomInput identity
                         |> Select.withOnRemoveItem OnRemoveItem
                         |> Select.withCutoff 12
                         |> Select.withNotFound "No matches"
-                        |> Select.withPrompt "Select a tag"
+                        |> Select.withPrompt "by title, authors, language and tags"
                 }
                 -- map
                 , center = { x = 100, y = 50 }
@@ -257,8 +252,6 @@ filter minChars toLabel query items =
 type Msg =
       SetWindowWidth Int
     -- table and data
-    | SetNameQuery String
-    | SetProgrammingLanguageQuery String
     | SetMultiQuery (MultiQueryMsg String)
     | SetTableState Table.State
     | ClearFilter
@@ -325,20 +318,17 @@ update msg model =
         OnZoomReset ->
             ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
         -- table and data
-        SetNameQuery newQuery ->
-            ({ model | nameQuery = newQuery }, Cmd.none)
-        SetProgrammingLanguageQuery newQuery ->
-            ({ model | programmingLanguageQuery = newQuery }, Cmd.none)
         SetMultiQuery sub ->
             let ( subModel, subCmd ) = updateMultiQuery sub model.multiQuery
-            in  ({ model | multiQuery = subModel, tagsQuery = subModel.selected }, Cmd.map SetMultiQuery subCmd)
+            in  ({ model | multiQuery = subModel, multiQueryContent = subModel.selected }, Cmd.map SetMultiQuery subCmd)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
-            ({ model |
-               nameQuery = ""
-             , programmingLanguageQuery = ""
-             , tagsQuery = [ ]
+            let oldMultiQuery = model.multiQuery
+                newMultiQuery = { oldMultiQuery | selected = [ ] }
+            in ({ model |
+               multiQuery = newMultiQuery
+             , multiQueryContent = [ ]
              , clickedElement = Nothing
              }, Cmd.none)
         -- modal
@@ -393,9 +383,7 @@ view devel
     {   windowWidth,
         elements,
         tableState,
-        nameQuery,
-        programmingLanguageQuery,
-        tagsQuery,
+        multiQueryContent,
         multiQuery,
         center,
         dragging,
@@ -546,19 +534,21 @@ view devel
                    ]
 
         -- search/filter logic
-        lowerNameQuery = String.toLower nameQuery
-        lowerProgrammingQuery = String.toLower programmingLanguageQuery
         acceptableResources = 
             case clickedElement of
-                Nothing -> List.filter (
-                    (\x ->
-                        let 
-                            matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
-                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| List.map (\l -> l.name) <| x.programmingLanguage
-                            matchTag = any (\tag -> member tag tagsQuery) x.tags
-                        in matchName && matchProg && matchTag
-                        )
-                    ) elements
+                Nothing -> 
+                    case multiQueryContent of
+                        [ ] -> elements
+                        _   -> List.filter (
+                            (\x ->
+                                let 
+                                    matchName = any (\v -> SF.match v x.name) multiQueryContent
+                                    matchAuthor = any (\v -> member v multiQueryContent) x.author
+                                    matchProg = any (\v -> member v multiQueryContent) x.programmingLanguage
+                                    matchTag = any (\v -> member v multiQueryContent) x.tags
+                                in matchAuthor || matchName || matchProg || matchTag
+                                )
+                            ) elements
                 Just x -> [x]
 
         -- table
@@ -676,7 +666,7 @@ view devel
                     ] else [ 
                       idColumn "ID" .id
                     , resourceColumn "Material" .year .name .author
-                    , stringListColumn "Language" (\data -> List.map (\l -> l.name) data.programmingLanguage) viewProgrammingLanguage
+                    , stringListColumn "Language" .programmingLanguage viewProgrammingLanguage
                     , stringListColumn "Tags" .tags viewTags
                     , linkAndModalColumn "" .link .id
                     ]
@@ -713,7 +703,7 @@ view devel
                                 , oneRow "Topic: "            x.topic
                                 , oneRow "Description: "      x.description
                                 , oneRow "Language: "         x.language
-                                , oneRow "Prog. language: "   <| String.join ", " <| List.map (\l -> l.name) x.programmingLanguage
+                                , oneRow "Prog. language: "   <| String.join ", " x.programmingLanguage
                                 , oneRow "Tools: "            <| String.join ", " x.tools
                                 , oneRow "Level: "            <| difficultyToString x.levelOfDifficulty
                                 , oneRow "Material type: "    x.materialType
@@ -771,8 +761,6 @@ view devel
                 |> Modal.view welcomeVisibility
 
         -- layout helper functions
-        query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
-        query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
         multiQuerySelect = H.map SetMultiQuery (p [] [ Select.view multiQuery.selectConfig multiQuery.selectState multiQuery.available multiQuery.selected ])
 
     in
@@ -820,11 +808,6 @@ view devel
                                             ]
                                         ]
                                     , Grid.colBreak []
-                                    ] ++ if windowWidth < breakWindowWidth then [
-                                        Grid.col [] [ query1, query2 ]
-                                    ] else [
-                                      Grid.col [] [ query1 ]
-                                    , Grid.col [] [ query2 ]
                                     , Grid.col [] [ multiQuerySelect ]
                                     ]
                                 )
