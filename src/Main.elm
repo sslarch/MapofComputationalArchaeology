@@ -610,25 +610,11 @@ view devel
                     Nothing -> ""
                     Just a ->  if moreThanOneAuthor then (a ++ " et al.") else a
 
-        badgeStyle = [
-              style "display" "inline-block"
-            , style "color" "white"
-            , style "padding" "1px 4px"
-            , style "text-align" "center"
-            , style "border-radius" "5px"
-            , style "margin" "2px"
-            , style "font-size" "15px"
-            ]
-
         viewProgrammingLanguage : List String -> Table.HtmlDetails Msg
-        viewProgrammingLanguage ss =
-            --Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
-            Table.HtmlDetails [] (map (makeButton "#80b3ffff") ss)
+        viewProgrammingLanguage ss = Table.HtmlDetails [] (map (makeButton "#80b3ffff") ss)
 
         viewTags : List String -> Table.HtmlDetails Msg
-        viewTags ss =
-            --Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
-            Table.HtmlDetails [] (map (makeButton "#bfb891ff") ss)
+        viewTags ss = Table.HtmlDetails [] (map (makeButton "#bfb891ff") ss)
 
         makeButton : String -> String -> H.Html Msg
         makeButton color s = case s of
@@ -639,6 +625,12 @@ view devel
                         , Spacing.ml1
                         , style "background-color" color
                         , style "color" "white"
+                        , style "display" "inline-block"
+                        , style "padding" "1px 4px"
+                        , style "text-align" "center"
+                        , style "border-radius" "5px"
+                        , style "margin" "2px"
+                        , style "font-size" "15px"
                         ]
                     , Button.outlineDark
                     , Button.small
