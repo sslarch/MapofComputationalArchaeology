@@ -253,6 +253,7 @@ type Msg =
       SetWindowWidth Int
     -- table and data
     | SetMultiQuery (MultiQueryMsg String)
+    | ButtonAddToQuery String
     | SetTableState Table.State
     | ClearFilter
     -- map
@@ -319,16 +320,24 @@ update msg model =
             ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
         -- table and data
         SetMultiQuery sub ->
-            let ( subModel, subCmd ) = updateMultiQuery sub model.multiQuery
-            in  ({ model | multiQuery = subModel, multiQueryContent = subModel.selected }, Cmd.map SetMultiQuery subCmd)
+            let ( newMultiQuery, subCmd ) = updateMultiQuery sub model.multiQuery
+            in  ({ model | multiQueryContent = newMultiQuery.selected, multiQuery = newMultiQuery }, Cmd.map SetMultiQuery subCmd)
+        ButtonAddToQuery s ->
+            let oldMultiQuery = model.multiQuery
+                newMultiQuery = { oldMultiQuery | selected = oldMultiQuery.selected ++ [s] }
+            in ({ model |
+               multiQueryContent = newMultiQuery.selected
+             , multiQuery = newMultiQuery
+             , clickedElement = Nothing
+             }, Cmd.none)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
             let oldMultiQuery = model.multiQuery
                 newMultiQuery = { oldMultiQuery | selected = [ ] }
             in ({ model |
-               multiQuery = newMultiQuery
-             , multiQueryContent = [ ]
+               multiQueryContent = [ ]
+             , multiQuery = newMultiQuery
              , clickedElement = Nothing
              }, Cmd.none)
         -- modal
@@ -543,7 +552,7 @@ view devel
                             (\x ->
                                 let 
                                     matchName = any (\v -> SF.match v x.name) multiQueryContent
-                                    matchAuthor = any (\v -> member v multiQueryContent) x.author
+                                    matchAuthor = any (\v -> SF.match v (String.join "" x.author)) multiQueryContent
                                     matchProg = any (\v -> member v multiQueryContent) x.programmingLanguage
                                     matchTag = any (\v -> member v multiQueryContent) x.tags
                                 in matchAuthor || matchName || matchProg || matchTag
@@ -613,18 +622,27 @@ view devel
         viewProgrammingLanguage : List String -> Table.HtmlDetails Msg
         viewProgrammingLanguage ss =
             --Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
-            Table.HtmlDetails [] (map (\s -> 
-                        Button.button
-                        [ Button.attrs [ HE.onClick OnZoomIn, Spacing.ml1 ]
-                        , Button.outlineSecondary
-                        , Button.small
-                        ]
-                        [ text s ]) ss)
-
+            Table.HtmlDetails [] (map (makeButton "#80b3ffff") ss)
 
         viewTags : List String -> Table.HtmlDetails Msg
         viewTags ss =
-            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
+            --Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
+            Table.HtmlDetails [] (map (makeButton "#bfb891ff") ss)
+
+        makeButton : String -> String -> H.Html Msg
+        makeButton color s = case s of
+            "" -> H.div [] []
+            _  -> Button.button
+                    [ Button.attrs [
+                          HE.onClick (ButtonAddToQuery s)
+                        , Spacing.ml1
+                        , style "background-color" color
+                        , style "color" "white"
+                        ]
+                    , Button.outlineDark
+                    , Button.small
+                    ]
+                    [ text s ]
 
         stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails Msg) -> Table.Column data Msg
         stringListColumn colName toStringList viewFunction =
