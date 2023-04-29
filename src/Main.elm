@@ -551,11 +551,12 @@ view devel
                         _   -> List.filter (
                             (\x ->
                                 let 
-                                    matchName = any (\v -> SF.match v x.name) multiQueryContent
-                                    matchAuthor = any (\v -> SF.match v (String.join "" x.author)) multiQueryContent
-                                    matchProg = any (\v -> member v multiQueryContent) x.programmingLanguage
-                                    matchTag = any (\v -> member v multiQueryContent) x.tags
-                                in matchAuthor || matchName || matchProg || matchTag
+                                    toLow = String.toLower
+                                    matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
+                                    matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
+                                    matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
+                                    matchTag    = any (\v -> member v multiQueryContent) x.tags
+                                in  matchName || matchAuthor || matchProg || matchTag
                                 )
                             ) elements
                 Just x -> [x]
