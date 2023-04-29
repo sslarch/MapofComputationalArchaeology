@@ -27,6 +27,8 @@ import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
 import List exposing (map)
 import Maybe.Extra exposing (values)
+import Select as Select
+import Simple.Fuzzy as SF
 import String exposing (split, trim)
 import Svg as S
 import Svg.Attributes as SA
@@ -64,6 +66,7 @@ type alias Model = {
     , nameQuery                 : String
     , programmingLanguageQuery  : String
     , tagsQuery                 : String
+    , multiQuery                : QueryModel
     -- map
     , center                    : CS.Point
     , dragging                  : Dragging
@@ -76,6 +79,21 @@ type alias Model = {
     -- welcome
     , welcomeVisibility         : Modal.Visibility
     }
+
+type alias QueryModel =
+    { id : String
+    , available : List String
+    , itemToLabel : String -> String
+    , selected : List String
+    , selectState : Select.State
+    , selectConfig : Select.Config (MultiQueryMsg String) String
+    }
+
+type MultiQueryMsg item
+    = NoOp
+    | OnSelect (Maybe item)
+    | OnRemoveItem item
+    | SelectMsg (Select.Msg item)
 
 type Dragging =
     CouldStillBeClick CS.Point
@@ -193,6 +211,24 @@ init wW elements =
                 , nameQuery = ""
                 , programmingLanguageQuery = ""
                 , tagsQuery = ""
+                , multiQuery = {
+                    id = "exampleMulti"
+                  , available = ["A", "B", "C"]
+                  , itemToLabel = identity
+                  , selected = [ "A", "B" ]
+                  , selectState = Select.init "test"
+                  , selectConfig = Select.newConfig
+                        { onSelect = OnSelect
+                        , toLabel = identity
+                        , filter = filter 2 identity
+                        , toMsg = SelectMsg
+                        }
+                        |> Select.withMultiSelection True
+                        |> Select.withOnRemoveItem OnRemoveItem
+                        |> Select.withCutoff 12
+                        |> Select.withNotFound "No matches"
+                        |> Select.withPrompt "Select a color"
+                }
                 -- map
                 , center = { x = 100, y = 50 }
                 , dragging = None
@@ -207,6 +243,15 @@ init wW elements =
                 }
     in ( model, Cmd.none )
 
+filter : Int -> (a -> String) -> String -> List a -> Maybe (List a)
+filter minChars toLabel query items =
+    if String.length query < minChars then
+        Nothing
+    else
+        items
+            |> SF.filter toLabel query
+            |> Just
+
 -- UPDATE
 
 type Msg =
@@ -215,6 +260,7 @@ type Msg =
     | SetNameQuery String
     | SetProgrammingLanguageQuery String
     | SetTagsQuery String
+    | SetMultiQuery (MultiQueryMsg String)
     | SetTableState Table.State
     | ClearFilter
     -- map
@@ -286,6 +332,9 @@ update msg model =
             ({ model | programmingLanguageQuery = newQuery }, Cmd.none)
         SetTagsQuery newQuery ->
             ({ model | tagsQuery = newQuery }, Cmd.none)
+        SetMultiQuery sub ->
+            let ( subModel, subCmd ) = updateMultiQuery sub model.multiQuery
+            in  ({ model | multiQuery = subModel }, Cmd.map SetMultiQuery subCmd)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
@@ -304,6 +353,36 @@ update msg model =
         CloseWelcome ->
             ({ model | welcomeVisibility = Modal.hidden } , Cmd.none)
 
+updateMultiQuery : MultiQueryMsg String -> QueryModel -> ( QueryModel, Cmd (MultiQueryMsg String) )
+updateMultiQuery msg model =
+    case msg of
+        OnSelect maybeColor ->
+            let
+                selected =
+                    maybeColor
+                        |> Maybe.map (List.singleton >> List.append model.selected)
+                        |> Maybe.withDefault []
+            in
+            ( { model | selected = selected }, Cmd.none )
+        OnRemoveItem colorToRemove ->
+            let
+                selected =
+                    List.filter (\curColor -> curColor /= colorToRemove)
+                        model.selected
+            in
+            ( { model | selected = selected }, Cmd.none )
+        SelectMsg subMsg ->
+            let
+                ( updated, cmd ) =
+                    Select.update
+                        model.selectConfig
+                        subMsg
+                        model.selectState
+            in
+            ( { model | selectState = updated }, cmd )
+        NoOp ->
+            ( model, Cmd.none )
+
 updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
 updateCenter center prevOffset offset = {
     x = center.x + (prevOffset.x - offset.x)
@@ -320,6 +399,7 @@ view devel
         nameQuery,
         programmingLanguageQuery,
         tagsQuery,
+        multiQuery,
         center,
         dragging,
         percentage,
@@ -698,6 +778,7 @@ view devel
         query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
         query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
         query3 = input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
+        multiQuerySelect = H.map SetMultiQuery (p [] [ Select.view multiQuery.selectConfig multiQuery.selectState multiQuery.available multiQuery.selected ])
 
     in
         -- main layout
@@ -750,6 +831,7 @@ view devel
                                       Grid.col [] [ query1 ]
                                     , Grid.col [] [ query2 ]
                                     , Grid.col [] [ query3 ]
+                                    , Grid.col [] [ multiQuerySelect ]
                                     ]
                                 )
                             ]
