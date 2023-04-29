@@ -25,7 +25,7 @@ import FontAwesome.Styles as Icon
 import Html as H exposing (Html, a, br, button, div, h1, input, p, span, text)
 import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
-import List exposing (map)
+import List exposing (map, concat, sort, any, member)
 import Maybe.Extra exposing (values)
 import Select as Select
 import Simple.Fuzzy as SF
@@ -65,7 +65,7 @@ type alias Model = {
     , tableState                : Table.State
     , nameQuery                 : String
     , programmingLanguageQuery  : String
-    , tagsQuery                 : String
+    , tagsQuery                 : List String
     , multiQuery                : QueryModel
     -- map
     , center                    : CS.Point
@@ -210,13 +210,13 @@ init wW elements =
                 , tableState = Table.initialSort "ID"
                 , nameQuery = ""
                 , programmingLanguageQuery = ""
-                , tagsQuery = ""
+                , tagsQuery = [ ]
                 , multiQuery = {
                     id = "exampleMulti"
-                  , available = ["A", "B", "C"]
+                  , available = map .tags teachingResources |> concat |> sort
                   , itemToLabel = identity
-                  , selected = [ "A", "B" ]
-                  , selectState = Select.init "test"
+                  , selected = [ ]
+                  , selectState = Select.init ""
                   , selectConfig = Select.newConfig
                         { onSelect = OnSelect
                         , toLabel = identity
@@ -227,7 +227,7 @@ init wW elements =
                         |> Select.withOnRemoveItem OnRemoveItem
                         |> Select.withCutoff 12
                         |> Select.withNotFound "No matches"
-                        |> Select.withPrompt "Select a color"
+                        |> Select.withPrompt "Select a tag"
                 }
                 -- map
                 , center = { x = 100, y = 50 }
@@ -259,7 +259,6 @@ type Msg =
     -- table and data
     | SetNameQuery String
     | SetProgrammingLanguageQuery String
-    | SetTagsQuery String
     | SetMultiQuery (MultiQueryMsg String)
     | SetTableState Table.State
     | ClearFilter
@@ -330,18 +329,16 @@ update msg model =
             ({ model | nameQuery = newQuery }, Cmd.none)
         SetProgrammingLanguageQuery newQuery ->
             ({ model | programmingLanguageQuery = newQuery }, Cmd.none)
-        SetTagsQuery newQuery ->
-            ({ model | tagsQuery = newQuery }, Cmd.none)
         SetMultiQuery sub ->
             let ( subModel, subCmd ) = updateMultiQuery sub model.multiQuery
-            in  ({ model | multiQuery = subModel }, Cmd.map SetMultiQuery subCmd)
+            in  ({ model | multiQuery = subModel, tagsQuery = subModel.selected }, Cmd.map SetMultiQuery subCmd)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
             ({ model |
                nameQuery = ""
              , programmingLanguageQuery = ""
-             , tagsQuery = ""
+             , tagsQuery = [ ]
              , clickedElement = Nothing
              }, Cmd.none)
         -- modal
@@ -551,7 +548,6 @@ view devel
         -- search/filter logic
         lowerNameQuery = String.toLower nameQuery
         lowerProgrammingQuery = String.toLower programmingLanguageQuery
-        lowerTagsQuery = String.toLower tagsQuery
         acceptableResources = 
             case clickedElement of
                 Nothing -> List.filter (
@@ -559,7 +555,7 @@ view devel
                         let 
                             matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
                             matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| List.map (\l -> l.name) <| x.programmingLanguage
-                            matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
+                            matchTag = any (\tag -> member tag tagsQuery) x.tags
                         in matchName && matchProg && matchTag
                         )
                     ) elements
@@ -777,7 +773,6 @@ view devel
         -- layout helper functions
         query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
         query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
-        query3 = input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
         multiQuerySelect = H.map SetMultiQuery (p [] [ Select.view multiQuery.selectConfig multiQuery.selectState multiQuery.available multiQuery.selected ])
 
     in
@@ -826,11 +821,10 @@ view devel
                                         ]
                                     , Grid.colBreak []
                                     ] ++ if windowWidth < breakWindowWidth then [
-                                        Grid.col [] [ query1, query2, query3 ]
+                                        Grid.col [] [ query1, query2 ]
                                     ] else [
                                       Grid.col [] [ query1 ]
                                     , Grid.col [] [ query2 ]
-                                    , Grid.col [] [ query3 ]
                                     , Grid.col [] [ multiQuerySelect ]
                                     ]
                                 )
