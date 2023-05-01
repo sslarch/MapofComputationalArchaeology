@@ -664,9 +664,6 @@ view devel
                               ] ]
                 |> Modal.view welcomeVisibility
 
-        -- layout helper functions
-        multiQuerySelect = H.map SetMultiQuery (p [] [ Select.view multiQuery.selectConfig multiQuery.selectState multiQuery.available multiQuery.selected ])
-
     in
         -- main layout
         div [] [
@@ -712,7 +709,16 @@ view devel
                                             ]
                                         ]
                                     , Grid.colBreak []
-                                    , Grid.col [] [ multiQuerySelect ]
+                                    , Grid.col []
+                                        [ H.map SetMultiQuery (
+                                            div [] [
+                                              Select.view multiQuery.selectConfig
+                                                          multiQuery.selectState
+                                                          multiQuery.available
+                                                          multiQuery.selected
+                                            ])
+
+                                        ]
                                     ]
                                 )
                             ]
