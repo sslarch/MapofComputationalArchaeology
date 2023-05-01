@@ -1,7 +1,10 @@
 module Main exposing (..)
 
 import MapOfComputionalArchaeology exposing (comparchmap)
-import TeachingMaterialData exposing (teachingMaterialString)
+import TeachingMaterial exposing (
+    TeachingResource, Difficulty (..),
+    makeDummyResource, teachingResources,
+    difficultyToString)
 
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
@@ -18,16 +21,16 @@ import Chart.Attributes as CA
 import Chart.Events as CE
 import Chart.Item as CI
 import Chart.Svg as CS
-import Csv.Decode as Decode exposing (Decoder)
 import FontAwesome as Icon exposing (Icon)
 import FontAwesome.Solid as Icon
 import FontAwesome.Styles as Icon
 import Html as H exposing (Html, a, br, button, div, h1, input, p, span, text)
 import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
-import List exposing (map)
+import List exposing (map, concat, sort, any, member)
 import Maybe.Extra exposing (values)
-import String exposing (split, trim)
+import Select as Select
+import Simple.Fuzzy as SF
 import Svg as S
 import Svg.Attributes as SA
 import Table exposing (defaultCustomizations)
@@ -61,15 +64,13 @@ type alias Model = {
     -- table and data
     , elements                  : List TeachingResource
     , tableState                : Table.State
-    , nameQuery                 : String
-    , programmingLanguageQuery  : String
-    , tagsQuery                 : String
+    , multiQueryContent         : List String
+    , multiQuery                : QueryModel
     -- map
     , center                    : CS.Point
     , dragging                  : Dragging
     , percentage                : Float
     , hovering                  : List (CI.One TeachingResource CI.Dot)
-    , clickedElement            : Maybe TeachingResource
     -- modal
     , modalVisibility           : Modal.Visibility
     , selectedElement           : Maybe TeachingResource
@@ -77,107 +78,25 @@ type alias Model = {
     , welcomeVisibility         : Modal.Visibility
     }
 
+type alias QueryModel =
+    { id : String
+    , available : List String
+    , itemToLabel : String -> String
+    , selected : List String
+    , selectState : Select.State
+    , selectConfig : Select.Config (MultiQueryMsg String) String
+    }
+
+type MultiQueryMsg item
+    = NoOp
+    | OnSelect (Maybe item)
+    | OnRemoveItem item
+    | SelectMsg (Select.Msg item)
+
 type Dragging =
     CouldStillBeClick CS.Point
   | ForSureDragging CS.Point
   | None
-
--- DATA
-
-type alias TeachingResource =
-    { id                        : String
-    , partner                   : List String
-    , x                         : Float
-    , y                         : Float
-    , name                      : String
-    , author                    : List String
-    , year                      : String
-    , topic                     : String
-    , language                  : String
-    , programmingLanguage       : List String
-    , tools                     : List String
-    , levelOfDifficulty         : Difficulty
-    , description               : String
-    , materialType              : String
-    , tags                      : List String
-    , tagsOpenArchaeo           : List String
-    , link                      : String
-    , citation                  : String
-    }
-
-type Difficulty =
-      Beginner
-    | Intermediate
-    | Advanced
-
-difficultyFromString : String -> Result String Difficulty
-difficultyFromString s = case s of
-    "beginner"      -> Ok Beginner
-    "intermediate"  -> Ok Intermediate
-    "advanced"      -> Ok Advanced
-    _               -> Err "invalid diffculty string"
-
-difficultyToString : Difficulty -> String
-difficultyToString d = case d of
-    Beginner        -> "beginner"
-    Intermediate    -> "intermediate"
-    Advanced        -> "advanced"
-
-makeDummyResource : Float -> Float -> TeachingResource
-makeDummyResource x y = {
-      id = ""
-    , partner = []
-    , x = x
-    , y = y
-    , name = ""
-    , author = []
-    , year = ""
-    , topic = ""
-    , language = ""
-    , programmingLanguage = []
-    , tools = []
-    , levelOfDifficulty = Beginner
-    , description = ""
-    , materialType = ""
-    , tags = []
-    , tagsOpenArchaeo = []
-    , link = ""
-    , citation = ""
-    }
-
-decodeTeachingResource : Decoder TeachingResource
-decodeTeachingResource =
-    let decodeStringList = Decode.map (List.map trim) <| Decode.map (\s -> split "," s) Decode.string
-        decodeDifficulty = Decode.string |>
-                           Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
-    in Decode.into TeachingResource
-            |> Decode.pipeline (Decode.field "ID" Decode.string)
-            |> Decode.pipeline (Decode.field "Partner" decodeStringList)
-            |> Decode.pipeline (Decode.field "X_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Name" Decode.string)
-            |> Decode.pipeline (Decode.field "Author" decodeStringList)
-            |> Decode.pipeline (Decode.field "Year" Decode.string)
-            |> Decode.pipeline (Decode.field "Topic" Decode.string)
-            |> Decode.pipeline (Decode.field "Language" Decode.string)
-            |> Decode.pipeline (Decode.field "Programming_language" decodeStringList)
-            |> Decode.pipeline (Decode.field "Tools" decodeStringList)
-            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
-            |> Decode.pipeline (Decode.field "Description" Decode.string)
-            |> Decode.pipeline (Decode.field "Material_type" Decode.string)
-            |> Decode.pipeline (Decode.field "Tags" decodeStringList)
-            |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
-            |> Decode.pipeline (Decode.field "Link" Decode.string)
-            |> Decode.pipeline (Decode.field "Citation" Decode.string)
-
-teachingResources : List TeachingResource
-teachingResources =
-    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
-        Err x -> -- for debugging of .tsv file and parsing
-                 --let _ = Debug.log "Parsing error" (Decode.errorToString x)
-                 --in []
-                 []
-        Ok x -> x
 
 -- INIT
 
@@ -187,15 +106,31 @@ init wW elements =
                 -- table and data
                 , elements = teachingResources
                 , tableState = Table.initialSort "ID"
-                , nameQuery = ""
-                , programmingLanguageQuery = ""
-                , tagsQuery = ""
+                , multiQueryContent = [ ]
+                , multiQuery = {
+                    id = "exampleMulti"
+                  , available = (map .tags teachingResources |> concat) ++ (map .programmingLanguage teachingResources |> concat) |> sort
+                  , itemToLabel = identity
+                  , selected = [ ]
+                  , selectState = Select.init ""
+                  , selectConfig = Select.newConfig
+                        { onSelect = OnSelect
+                        , toLabel = identity
+                        , filter = filter 0 identity
+                        , toMsg = SelectMsg
+                        }
+                        |> Select.withMultiSelection True
+                        |> Select.withCustomInput identity
+                        |> Select.withOnRemoveItem OnRemoveItem
+                        |> Select.withCutoff 12
+                        |> Select.withNotFound "No matches"
+                        |> Select.withPrompt "by title, authors, language or tags"
+                }
                 -- map
                 , center = { x = 100, y = 50 }
                 , dragging = None
                 , percentage = 100
                 , hovering = []
-                , clickedElement = Nothing
                 -- modal
                 , modalVisibility = Modal.hidden
                 , selectedElement = Nothing
@@ -204,14 +139,22 @@ init wW elements =
                 }
     in ( model, Cmd.none )
 
+filter : Int -> (a -> String) -> String -> List a -> Maybe (List a)
+filter minChars toLabel query items =
+    if String.length query < minChars then
+        Nothing
+    else
+        items
+            |> SF.filter toLabel query
+            |> Just
+
 -- UPDATE
 
 type Msg =
       SetWindowWidth Int
     -- table and data
-    | SetNameQuery String
-    | SetProgrammingLanguageQuery String
-    | SetTagsQuery String
+    | SetMultiQuery (MultiQueryMsg String)
+    | ButtonAddToQuery String
     | SetTableState Table.State
     | ClearFilter
     -- map
@@ -237,8 +180,8 @@ update msg model =
         -- map
         OnMouseClick hovering ->
             case (List.head (filterHoveringToRealEntries hovering)) of
-                Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
-                Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
+                Nothing -> (model, Cmd.none)
+                Just x -> update (ShowModal (Just <| CI.getData x)) model
         OnMouseDown offset ->
             ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
         OnMouseMove offset hovering ->
@@ -277,20 +220,24 @@ update msg model =
         OnZoomReset ->
             ({ model | percentage = 100, center = { x = 100, y = 50 } }, Cmd.none)
         -- table and data
-        SetNameQuery newQuery ->
-            ({ model | nameQuery = newQuery }, Cmd.none)
-        SetProgrammingLanguageQuery newQuery ->
-            ({ model | programmingLanguageQuery = newQuery }, Cmd.none)
-        SetTagsQuery newQuery ->
-            ({ model | tagsQuery = newQuery }, Cmd.none)
+        SetMultiQuery sub ->
+            let ( newMultiQuery, subCmd ) = updateMultiQuery sub model.multiQuery
+            in  ({ model | multiQueryContent = newMultiQuery.selected, multiQuery = newMultiQuery }, Cmd.map SetMultiQuery subCmd)
+        ButtonAddToQuery s ->
+            let oldMultiQuery = model.multiQuery
+                newMultiQuery = { oldMultiQuery | selected = oldMultiQuery.selected ++ [s] }
+            in ({ model |
+               multiQueryContent = newMultiQuery.selected
+             , multiQuery = newMultiQuery
+             }, Cmd.none)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
         ClearFilter ->
-            ({ model |
-               nameQuery = ""
-             , programmingLanguageQuery = ""
-             , tagsQuery = ""
-             , clickedElement = Nothing
+            let oldMultiQuery = model.multiQuery
+                newMultiQuery = { oldMultiQuery | selected = [ ] }
+            in ({ model |
+               multiQueryContent = [ ]
+             , multiQuery = newMultiQuery
              }, Cmd.none)
         -- modal
         CloseModal ->
@@ -300,6 +247,36 @@ update msg model =
         -- welcome
         CloseWelcome ->
             ({ model | welcomeVisibility = Modal.hidden } , Cmd.none)
+
+updateMultiQuery : MultiQueryMsg String -> QueryModel -> ( QueryModel, Cmd (MultiQueryMsg String) )
+updateMultiQuery msg model =
+    case msg of
+        OnSelect maybeColor ->
+            let
+                selected =
+                    maybeColor
+                        |> Maybe.map (List.singleton >> List.append model.selected)
+                        |> Maybe.withDefault []
+            in
+            ( { model | selected = selected }, Cmd.none )
+        OnRemoveItem colorToRemove ->
+            let
+                selected =
+                    List.filter (\curColor -> curColor /= colorToRemove)
+                        model.selected
+            in
+            ( { model | selected = selected }, Cmd.none )
+        SelectMsg subMsg ->
+            let
+                ( updated, cmd ) =
+                    Select.update
+                        model.selectConfig
+                        subMsg
+                        model.selectState
+            in
+            ( { model | selectState = updated }, cmd )
+        NoOp ->
+            ( model, Cmd.none )
 
 updateCenter : CS.Point -> CS.Point -> CS.Point -> CS.Point
 updateCenter center prevOffset offset = {
@@ -314,14 +291,12 @@ view devel
     {   windowWidth,
         elements,
         tableState,
-        nameQuery,
-        programmingLanguageQuery,
-        tagsQuery,
+        multiQueryContent,
+        multiQuery,
         center,
         dragging,
         percentage,
         hovering,
-        clickedElement,
         modalVisibility,
         selectedElement,
         welcomeVisibility
@@ -333,7 +308,21 @@ view devel
         findElementByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
         findElementByID i =
-            List.head <| List.filter (\e -> e.id == i) elements
+            List.head <| List.filter (\e -> e.id == i) acceptableResources
+
+        -- search/filter logic
+        acceptableResources = case multiQueryContent of
+            [ ] -> elements
+            _   -> List.filter resourceFilter elements
+
+        resourceFilter : TeachingResource -> Bool
+        resourceFilter x =
+            let toLow = String.toLower
+                matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
+                matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
+                matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
+                matchTag    = any (\v -> member v multiQueryContent) x.tags
+            in  matchName || matchAuthor || matchProg || matchTag
 
         -- map
         mapPlot = 
@@ -428,14 +417,14 @@ view devel
                 -- actual data points
                 , C.series .x [
                     C.scatter .y 
-                        [ CA.size 3
+                        [ CA.size 2
                         , CA.diamond
                         , CA.highlight 0.6
                         , CA.highlightWidth 2
-                        , CA.highlightColor "white"
+                        , CA.highlightColor "#292929"
                         ] |>
                         C.named "Teaching resource" |>
-                        C.amongst hovering (\_ -> [ CA.size 15 ]) |>
+                        C.amongst hovering (\_ -> [ CA.size 12 ]) |>
                         -- color by difficulty level
                         C.variation (\i d -> [
                             CA.color (case d.levelOfDifficulty of
@@ -443,7 +432,7 @@ view devel
                                 Intermediate -> CA.yellow
                                 Advanced -> CA.red)
                         ])
-                        ] elements -- actual input data
+                        ] acceptableResources -- actual input data
                 ]
 
         -- plot helper functions
@@ -465,25 +454,8 @@ view devel
                    , CA.color "white"
                    ]
 
-        -- search/filter logic
-        lowerNameQuery = String.toLower nameQuery
-        lowerProgrammingQuery = String.toLower programmingLanguageQuery
-        lowerTagsQuery = String.toLower tagsQuery
-        acceptableResources = 
-            case clickedElement of
-                Nothing -> List.filter (
-                    (\x ->
-                        let 
-                            matchName = String.contains lowerNameQuery <| String.toLower <| (x.name ++ String.join "" x.author)
-                            matchProg = String.contains lowerProgrammingQuery <| String.toLower <| String.join "" <| x.programmingLanguage
-                            matchTag = String.contains lowerTagsQuery <| String.toLower <| String.join "" <| x.tags
-                        in matchName && matchProg && matchTag
-                        )
-                    ) elements
-                Just x -> [x]
-
         -- table
-        idColumn : String -> (data -> String) -> Table.Column data msg
+        idColumn : String -> (data -> String) -> Table.Column data Msg
         idColumn colName toString =
           Table.veryCustomColumn
             { name = colName
@@ -497,7 +469,7 @@ view devel
             , sorter = Table.increasingOrDecreasingBy toString
             }
 
-        resourceColumn : String -> (data -> String) -> (data -> String) -> (data -> List String) -> Table.Column data msg
+        resourceColumn : String -> (data -> String) -> (data -> String) -> (data -> List String) -> Table.Column data Msg
         resourceColumn colName getYear getName getAuthors =
           Table.veryCustomColumn
             { name = colName
@@ -531,25 +503,34 @@ view devel
                     Nothing -> ""
                     Just a ->  if moreThanOneAuthor then (a ++ " et al.") else a
 
-        badgeStyle = [
-              style "display" "inline-block"
-            , style "color" "white"
-            , style "padding" "1px 4px"
-            , style "text-align" "center"
-            , style "border-radius" "5px"
-            , style "margin" "2px"
-            , style "font-size" "15px"
-            ]
+        viewProgrammingLanguage : List String -> Table.HtmlDetails Msg
+        viewProgrammingLanguage ss = Table.HtmlDetails [] (map (makeButton "#80b3ffff") ss)
 
-        viewProgrammingLanguage : List String -> Table.HtmlDetails msg
-        viewProgrammingLanguage ss =
-            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#80b3ffff" ]) [ text s ]) ss)
+        viewTags : List String -> Table.HtmlDetails Msg
+        viewTags ss = Table.HtmlDetails [] (map (makeButton "#bfb891ff") ss)
 
-        viewTags : List String -> Table.HtmlDetails msg
-        viewTags ss =
-            Table.HtmlDetails [] (map (\s -> span (badgeStyle ++ [ style "background-color" "#bfb891ff" ]) [ text s ]) ss)
+        makeButton : String -> String -> H.Html Msg
+        makeButton color s = case s of
+            "" -> H.div [] []
+            _  -> Button.button
+                    [ Button.attrs [
+                          HE.onClick (ButtonAddToQuery s)
+                        , Spacing.ml1
+                        , style "background-color" color
+                        , style "color" "white"
+                        , style "display" "inline-block"
+                        , style "padding" "1px 4px"
+                        , style "text-align" "center"
+                        , style "border-radius" "5px"
+                        , style "margin" "2px"
+                        , style "font-size" "15px"
+                        ]
+                    , Button.outlineDark
+                    , Button.small
+                    ]
+                    [ text s ]
 
-        stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails msg) -> Table.Column data msg
+        stringListColumn : String -> (data -> List String) -> (List String -> Table.HtmlDetails Msg) -> Table.Column data Msg
         stringListColumn colName toStringList viewFunction =
           Table.veryCustomColumn
             { name = colName
@@ -650,7 +631,7 @@ view devel
             Modal.config CloseWelcome
                 |> Modal.large
                 |> Modal.hideOnBackdropClick True
-                |> Modal.h4 [] [ text "The Map of Computational Archaeology" ]
+                |> Modal.h4 [] [ text "The didactic map of computational archaeology" ]
                 |> Modal.body [] [
                     p [] [ text <| "Computational Archaeology is a wondrous field. "
                            ++ "To make it a bit easier to explore and navigate, this webapp "
@@ -672,7 +653,7 @@ view devel
                     p [] [ text <| "You can hover or click on the dots to get more information. "
                            ++ "Click ",
                            span [ style "color" "#EF3159" ] [ text "Clear filters" ],
-                           text <| " to reset the list below the map."
+                           text <| " to reset the list."
                          ]
                 ]
                 |> Modal.footer [] [ span [ style "font-style" "italic" ] [
@@ -684,9 +665,7 @@ view devel
                 |> Modal.view welcomeVisibility
 
         -- layout helper functions
-        query1 = input [ style "width" "100%", style "margin" "1px", placeholder "by Name and Authors", onInput SetNameQuery ] []
-        query2 = input [ style "width" "100%", style "margin" "1px", placeholder "by Language", onInput SetProgrammingLanguageQuery ] []
-        query3 = input [ style "width" "100%", style "margin" "1px", placeholder "by Tag", onInput SetTagsQuery ] []
+        multiQuerySelect = H.map SetMultiQuery (p [] [ Select.view multiQuery.selectConfig multiQuery.selectState multiQuery.available multiQuery.selected ])
 
     in
         -- main layout
@@ -708,7 +687,7 @@ view devel
                     Grid.col [ ] [
                           br [] []
                         , div [] [
-                                span [ style "font-size" "30px" ] [ text "Computational archaeology teaching material list" ]
+                                span [ style "font-size" "30px" ] [ text "The didactic map of computational archaeology" ]
                               , span [ style "display" "inline-block", style "width" "20px" ] []
                               , text " a project by the "
                               , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
@@ -733,12 +712,7 @@ view devel
                                             ]
                                         ]
                                     , Grid.colBreak []
-                                    ] ++ if windowWidth < breakWindowWidth then [
-                                        Grid.col [] [ query1, query2, query3 ]
-                                    ] else [
-                                      Grid.col [] [ query1 ]
-                                    , Grid.col [] [ query2 ]
-                                    , Grid.col [] [ query3 ]
+                                    , Grid.col [] [ multiQuerySelect ]
                                     ]
                                 )
                             ]
