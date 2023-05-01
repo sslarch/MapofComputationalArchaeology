@@ -421,7 +421,7 @@ view devel
                         , CA.diamond
                         , CA.highlight 0.6
                         , CA.highlightWidth 2
-                        , CA.highlightColor "black"
+                        , CA.highlightColor "#292929"
                         ] |>
                         C.named "Teaching resource" |>
                         C.amongst hovering (\_ -> [ CA.size 12 ]) |>
