@@ -124,7 +124,7 @@ init wW elements =
                         |> Select.withOnRemoveItem OnRemoveItem
                         |> Select.withCutoff 12
                         |> Select.withNotFound "No matches"
-                        |> Select.withPrompt "by title, authors, language and tags"
+                        |> Select.withPrompt "by title, authors, language or tags"
                 }
                 -- map
                 , center = { x = 100, y = 50 }
@@ -417,14 +417,14 @@ view devel
                 -- actual data points
                 , C.series .x [
                     C.scatter .y 
-                        [ CA.size 3
+                        [ CA.size 2
                         , CA.diamond
                         , CA.highlight 0.6
                         , CA.highlightWidth 2
-                        , CA.highlightColor "white"
+                        , CA.highlightColor "black"
                         ] |>
                         C.named "Teaching resource" |>
-                        C.amongst hovering (\_ -> [ CA.size 15 ]) |>
+                        C.amongst hovering (\_ -> [ CA.size 12 ]) |>
                         -- color by difficulty level
                         C.variation (\i d -> [
                             CA.color (case d.levelOfDifficulty of
@@ -631,7 +631,7 @@ view devel
             Modal.config CloseWelcome
                 |> Modal.large
                 |> Modal.hideOnBackdropClick True
-                |> Modal.h4 [] [ text "The Map of Computational Archaeology" ]
+                |> Modal.h4 [] [ text "The didactic map of computational archaeology" ]
                 |> Modal.body [] [
                     p [] [ text <| "Computational Archaeology is a wondrous field. "
                            ++ "To make it a bit easier to explore and navigate, this webapp "
@@ -653,7 +653,7 @@ view devel
                     p [] [ text <| "You can hover or click on the dots to get more information. "
                            ++ "Click ",
                            span [ style "color" "#EF3159" ] [ text "Clear filters" ],
-                           text <| " to reset the list below the map."
+                           text <| " to reset the list."
                          ]
                 ]
                 |> Modal.footer [] [ span [ style "font-style" "italic" ] [
@@ -687,7 +687,7 @@ view devel
                     Grid.col [ ] [
                           br [] []
                         , div [] [
-                                span [ style "font-size" "30px" ] [ text "Computational archaeology teaching material list" ]
+                                span [ style "font-size" "30px" ] [ text "The didactic map of computational archaeology" ]
                               , span [ style "display" "inline-block", style "width" "20px" ] []
                               , text " a project by the "
                               , a [ href "https://sslarch.github.io" ] [ text "SIG SSLA" ]
