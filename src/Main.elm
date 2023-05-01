@@ -308,7 +308,21 @@ view devel
         findElementByCoordinates x y =
             List.head <| List.filter (\e -> e.x == x && e.y == y) elements
         findElementByID i =
-            List.head <| List.filter (\e -> e.id == i) elements
+            List.head <| List.filter (\e -> e.id == i) acceptableResources
+
+        -- search/filter logic
+        acceptableResources = case multiQueryContent of
+            [ ] -> elements
+            _   -> List.filter resourceFilter elements
+
+        resourceFilter : TeachingResource -> Bool
+        resourceFilter x =
+            let toLow = String.toLower
+                matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
+                matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
+                matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
+                matchTag    = any (\v -> member v multiQueryContent) x.tags
+            in  matchName || matchAuthor || matchProg || matchTag
 
         -- map
         mapPlot = 
@@ -418,7 +432,7 @@ view devel
                                 Intermediate -> CA.yellow
                                 Advanced -> CA.red)
                         ])
-                        ] elements -- actual input data
+                        ] acceptableResources -- actual input data
                 ]
 
         -- plot helper functions
@@ -439,21 +453,6 @@ view devel
                    , CA.width 2
                    , CA.color "white"
                    ]
-
-        -- search/filter logic
-        acceptableResources = case multiQueryContent of
-            [ ] -> elements
-            _   -> List.filter (
-                (\x ->
-                    let 
-                        toLow = String.toLower
-                        matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
-                        matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
-                        matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
-                        matchTag    = any (\v -> member v multiQueryContent) x.tags
-                    in  matchName || matchAuthor || matchProg || matchTag
-                    )
-                ) elements
 
         -- table
         idColumn : String -> (data -> String) -> Table.Column data Msg
