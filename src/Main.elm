@@ -71,7 +71,6 @@ type alias Model = {
     , dragging                  : Dragging
     , percentage                : Float
     , hovering                  : List (CI.One TeachingResource CI.Dot)
-    , clickedElement            : Maybe TeachingResource
     -- modal
     , modalVisibility           : Modal.Visibility
     , selectedElement           : Maybe TeachingResource
@@ -132,7 +131,6 @@ init wW elements =
                 , dragging = None
                 , percentage = 100
                 , hovering = []
-                , clickedElement = Nothing
                 -- modal
                 , modalVisibility = Modal.hidden
                 , selectedElement = Nothing
@@ -182,8 +180,8 @@ update msg model =
         -- map
         OnMouseClick hovering ->
             case (List.head (filterHoveringToRealEntries hovering)) of
-                Nothing -> ({ model | clickedElement = Nothing }, Cmd.none)
-                Just x -> ({ model | clickedElement = Just <| CI.getData x }, Cmd.none)
+                Nothing -> (model, Cmd.none)
+                Just x -> update (ShowModal (Just <| CI.getData x)) model
         OnMouseDown offset ->
             ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
         OnMouseMove offset hovering ->
@@ -231,7 +229,6 @@ update msg model =
             in ({ model |
                multiQueryContent = newMultiQuery.selected
              , multiQuery = newMultiQuery
-             , clickedElement = Nothing
              }, Cmd.none)
         SetTableState newState ->
             ({ model | tableState = newState }, Cmd.none)
@@ -241,7 +238,6 @@ update msg model =
             in ({ model |
                multiQueryContent = [ ]
              , multiQuery = newMultiQuery
-             , clickedElement = Nothing
              }, Cmd.none)
         -- modal
         CloseModal ->
@@ -301,7 +297,6 @@ view devel
         dragging,
         percentage,
         hovering,
-        clickedElement,
         modalVisibility,
         selectedElement,
         welcomeVisibility
@@ -446,23 +441,19 @@ view devel
                    ]
 
         -- search/filter logic
-        acceptableResources = 
-            case clickedElement of
-                Nothing -> 
-                    case multiQueryContent of
-                        [ ] -> elements
-                        _   -> List.filter (
-                            (\x ->
-                                let 
-                                    toLow = String.toLower
-                                    matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
-                                    matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
-                                    matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
-                                    matchTag    = any (\v -> member v multiQueryContent) x.tags
-                                in  matchName || matchAuthor || matchProg || matchTag
-                                )
-                            ) elements
-                Just x -> [x]
+        acceptableResources = case multiQueryContent of
+            [ ] -> elements
+            _   -> List.filter (
+                (\x ->
+                    let 
+                        toLow = String.toLower
+                        matchName   = any (\v -> String.contains (toLow v) (toLow x.name)) multiQueryContent
+                        matchAuthor = any (\v -> String.contains (toLow v) (toLow <| String.join "" x.author)) multiQueryContent
+                        matchProg   = any (\v -> member v multiQueryContent) x.programmingLanguage
+                        matchTag    = any (\v -> member v multiQueryContent) x.tags
+                    in  matchName || matchAuthor || matchProg || matchTag
+                    )
+                ) elements
 
         -- table
         idColumn : String -> (data -> String) -> Table.Column data Msg
