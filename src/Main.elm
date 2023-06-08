@@ -105,7 +105,7 @@ init wW elements =
     let model = { windowWidth = wW
                 -- table and data
                 , elements = teachingResources
-                , tableState = Table.initialSort "ID"
+                , tableState = Table.sortBy "ID" True
                 , multiQueryContent = [ ]
                 , multiQuery = {
                     id = "exampleMulti"
