@@ -10,7 +10,7 @@ import String exposing (split, trim)
 
 type alias TeachingResource =
     { id                        : String
-    , partner                   : List String
+    , source                    : List String
     , x                         : Float
     , y                         : Float
     , name                      : String
@@ -39,7 +39,7 @@ difficultyFromString s = case s of
     "beginner"      -> Ok Beginner
     "intermediate"  -> Ok Intermediate
     "advanced"      -> Ok Advanced
-    _               -> Err "invalid diffculty string"
+    _               -> Err "invalid difficulty string"
 
 difficultyToString : Difficulty -> String
 difficultyToString d = case d of
@@ -50,7 +50,7 @@ difficultyToString d = case d of
 makeDummyResource : Float -> Float -> TeachingResource
 makeDummyResource x y = {
       id = ""
-    , partner = []
+    , source = []
     , x = x
     , y = y
     , name = ""
@@ -77,7 +77,7 @@ decodeTeachingResource =
                            Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
     in Decode.into TeachingResource
             |> Decode.pipeline (Decode.field "ID" Decode.string)
-            |> Decode.pipeline (Decode.field "Partner" decodeStringList)
+            |> Decode.pipeline (Decode.field "Source" decodeStringList)
             |> Decode.pipeline (Decode.field "X_map" Decode.float)
             |> Decode.pipeline (Decode.field "Y_map" Decode.float)
             |> Decode.pipeline (Decode.field "Name" Decode.string)

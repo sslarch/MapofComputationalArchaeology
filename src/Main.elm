@@ -408,7 +408,7 @@ view devel
                                 Nothing -> text ""
                                 Just x -> text (x.id ++ ": " ++ x.name)
                             ]
-                        -- lines to partner nodes
+                        -- lines to source nodes
                         , C.withPlane <| \_ ->
                             case curElem of
                                 Nothing -> []
@@ -438,17 +438,17 @@ view devel
         -- plot helper functions
         addLinesCurElement : TeachingResource -> List (C.Element data msg)
         addLinesCurElement elem =
-            let curPartners = values <| map findElementByID elem.partner
-            in case curPartners of
+            let curSources = values <| map findElementByID elem.source
+            in case curSources of
                 [] -> []
                 xs -> (map (makeOneLine elem) xs) ++ List.concatMap addLinesCurElement xs
 
         makeOneLine : TeachingResource -> TeachingResource -> C.Element data msg
-        makeOneLine elem partner =
+        makeOneLine elem source =
             C.line [ CA.x1 elem.x
-                   , CA.x2 partner.x
+                   , CA.x2 source.x
                    , CA.y1 elem.y
-                   , CA.y2 partner.y
+                   , CA.y2 source.y
                    , CA.dashed [ 10, 5 ]
                    , CA.width 2
                    , CA.color "white"
