@@ -70,7 +70,8 @@ type alias Model = {
     , center                    : CS.Point
     , dragging                  : Dragging
     , percentage                : Float
-    , hovering                  : List (CI.One TeachingResource CI.Dot)
+    , hovering                  : Maybe CE.Point
+    , closestPoint              : List (CI.One TeachingResource CI.Dot)
     -- modal
     , modalVisibility           : Modal.Visibility
     , selectedElement           : Maybe TeachingResource
@@ -130,7 +131,8 @@ init wW elements =
                 , center = { x = 100, y = 50 }
                 , dragging = None
                 , percentage = 100
-                , hovering = []
+                , hovering = Nothing
+                , closestPoint = []
                 -- modal
                 , modalVisibility = Modal.hidden
                 , selectedElement = Nothing
@@ -160,7 +162,7 @@ type Msg =
     -- map
     | OnMouseClick (List (CI.One TeachingResource CI.Dot))
     | OnMouseDown CS.Point
-    | OnMouseMove CS.Point (List (CI.One TeachingResource CI.Dot))
+    | OnMouseMove CS.Point CE.Point (List (CI.One TeachingResource CI.Dot))
     | OnMouseUp CS.Point CS.Point
     | OnMouseLeave
     | OnZoomIn
@@ -178,29 +180,33 @@ update msg model =
         SetWindowWidth w ->
             ({ model | windowWidth = w }, Cmd.none)
         -- map
-        OnMouseClick hovering ->
-            case (List.head (filterHoveringToRealEntries hovering)) of
+        OnMouseClick closestPoint ->
+            case (List.head (filterClosestPointToRealEntries closestPoint)) of
                 Nothing -> (model, Cmd.none)
                 Just x -> update (ShowModal (Just <| CI.getData x)) model
         OnMouseDown offset ->
             ({ model | dragging = CouldStillBeClick offset }, Cmd.none)
-        OnMouseMove offset hovering ->
+        OnMouseMove offset hovering closestPoint ->
             case model.dragging of
                 CouldStillBeClick prevOffset ->
                     if prevOffset == offset then
-                        ({ model | hovering = hovering }, Cmd.none)
+                        ({ model | closestPoint = closestPoint
+                         , hovering = Just hovering }, Cmd.none)
                     else
                         ({ model | center = updateCenter model.center prevOffset offset
                          , dragging = ForSureDragging offset
-                         , hovering = hovering
+                         , closestPoint = closestPoint
+                         , hovering = Just hovering
                          }, Cmd.none)
                 ForSureDragging prevOffset ->
                       ({ model | center = updateCenter model.center prevOffset offset
                       , dragging = ForSureDragging offset
-                      , hovering = hovering
+                      , closestPoint = closestPoint
+                      , hovering = Just hovering
                       }, Cmd.none)
                 None ->
-                    ({ model | hovering = hovering }, Cmd.none)
+                    ({ model | closestPoint = closestPoint
+                     , hovering = Just hovering }, Cmd.none)
         OnMouseUp offset coord ->
             case model.dragging of
                 CouldStillBeClick prevOffset ->
@@ -212,7 +218,7 @@ update msg model =
                 None ->
                     (model, Cmd.none)
         OnMouseLeave ->
-            ({ model | dragging = None, hovering = [] }, Cmd.none)
+            ({ model | dragging = None, closestPoint = [], hovering = Nothing }, Cmd.none)
         OnZoomIn ->
             ({ model | percentage = model.percentage + 20 }, Cmd.none)
         OnZoomOut ->
@@ -297,6 +303,7 @@ view devel
         dragging,
         percentage,
         hovering,
+        closestPoint,
         modalVisibility,
         selectedElement,
         welcomeVisibility
@@ -334,13 +341,13 @@ view devel
                 , CA.domain [ CA.zoom percentage, CA.centerAt center.y ]
                 , CE.onClick OnMouseClick (CE.getWithin 20 CI.dots)
                 , CE.onMouseDown OnMouseDown CE.getOffset
-                , CE.on "mousemove" (CE.map2 OnMouseMove CE.getOffset (CE.getWithin 20 CI.dots))
+                , CE.on "mousemove" (CE.map3 OnMouseMove CE.getOffset CE.getCoords (CE.getWithin 20 CI.dots))
                 , CE.on "mouseup" (CE.map2 OnMouseUp CE.getOffset CE.getCoords)
                 , CE.onMouseLeave OnMouseLeave
                 , CA.htmlAttrs
                     [ HA.style "user-select" "none"
                     , HA.style "cursor" <|
-                        case (filterHoveringToRealEntries hovering) of
+                        case (filterClosestPointToRealEntries closestPoint) of
                             [] -> case dragging of
                                       CouldStillBeClick _ -> "grabbing"
                                       ForSureDragging _ -> "grabbing"
@@ -392,7 +399,7 @@ view devel
                         [ CA.opacity 0] ]
                             (List.map2 makeDummyResource [0, 0, 200, 200] [0, 100, 100, 0])
                 -- additional elements for each point
-                , C.each (filterHoveringToRealEntries hovering) <| \p item -> 
+                , C.each (filterClosestPointToRealEntries closestPoint) <| \p item -> 
                     let curX = CI.getX item
                         curY = CI.getY item
                         curElem = findElementByCoordinates curX curY
@@ -424,7 +431,7 @@ view devel
                         , CA.highlightColor "#292929"
                         ] |>
                         C.named "Teaching resource" |>
-                        C.amongst hovering (\_ -> [ CA.size 12 ]) |>
+                        C.amongst closestPoint (\_ -> [ CA.size 12 ]) |>
                         -- color by difficulty level
                         C.variation (\i d -> [
                             CA.color (case d.levelOfDifficulty of
@@ -433,6 +440,15 @@ view devel
                                 Advanced -> CA.red)
                         ])
                         ] acceptableResources -- actual input data
+                -- coord display below plot
+                , case hovering of
+                    Just coords ->
+                      C.labelAt (CA.percent 96) (CA.percent 2) [CA.fontSize 7]
+                        [ S.text ("x: " ++ String.fromInt (round coords.x))
+                        , S.text (" y: " ++ String.fromInt (round coords.y))
+                        ]
+                    Nothing ->
+                      C.none
                 ]
 
         -- plot helper functions
@@ -730,8 +746,8 @@ view devel
             , detailsModal, detailsWelcome
             ]
 
-filterHoveringToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
-filterHoveringToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
+filterClosestPointToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
+filterClosestPointToRealEntries x = (List.filter (\y -> (CI.getData y).id /= "") x)
 
 -- SUBSCRIPTIONS
 
