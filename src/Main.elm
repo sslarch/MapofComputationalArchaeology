@@ -3,8 +3,7 @@ module Main exposing (..)
 import MapOfComputionalArchaeology exposing (comparchmap)
 import TeachingMaterial exposing (
     TeachingResource, Difficulty (..),
-    makeDummyResource, teachingResources,
-    difficultyToString)
+    makeDummyResource, difficultyToString, parseTeachingResources)
 
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
@@ -27,6 +26,7 @@ import FontAwesome.Styles as Icon
 import Html as H exposing (Html, a, br, button, div, h1, input, p, span, text)
 import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
+import Http as Http
 import List exposing (map, concat, sort, any, member)
 import Maybe.Extra exposing (values)
 import Select as Select
@@ -102,15 +102,15 @@ type Dragging =
 -- INIT
 
 init : Int -> List TeachingResource -> ( Model, Cmd Msg )
-init wW elements =
+init wW resources =
     let model = { windowWidth = wW
                 -- table and data
-                , elements = teachingResources
+                , elements = resources
                 , tableState = Table.sortBy "ID" True
                 , multiQueryContent = [ ]
                 , multiQuery = {
                     id = "exampleMulti"
-                  , available = (map .tags teachingResources |> concat) ++ (map .programmingLanguage teachingResources |> concat) |> sort
+                  , available = (map .tags resources |> concat) ++ (map .programmingLanguage resources |> concat) |> sort
                   , itemToLabel = identity
                   , selected = [ ]
                   , selectState = Select.init ""
@@ -154,6 +154,9 @@ filter minChars toLabel query items =
 
 type Msg =
       SetWindowWidth Int
+    -- download data
+    | SendHttpRequest
+    | DataReceived (Result Http.Error String)
     -- table and data
     | SetMultiQuery (MultiQueryMsg String)
     | ButtonAddToQuery String
@@ -179,6 +182,11 @@ update msg model =
     case msg of
         SetWindowWidth w ->
             ({ model | windowWidth = w }, Cmd.none)
+        -- download data
+        SendHttpRequest -> ( model, getTeachingResources )
+        DataReceived res -> case res of
+            Err x -> (model, Cmd.none)
+            Ok  x -> ({ model | elements = parseTeachingResources x }, Cmd.none)
         -- map
         OnMouseClick closestPoint ->
             case (List.head (filterClosestPointToRealEntries closestPoint)) of
@@ -252,7 +260,14 @@ update msg model =
             ({ model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none)
         -- welcome
         CloseWelcome ->
-            ({ model | welcomeVisibility = Modal.hidden } , Cmd.none)
+            ({ model | welcomeVisibility = Modal.hidden }, getTeachingResources )
+
+getTeachingResources : Cmd Msg
+getTeachingResources =
+    Http.get {
+          url = "https://raw.githubusercontent.com/sslarch/MapofComputationalArchaeology/main/data/teachingmaterial.tsv"
+        , expect = Http.expectString DataReceived
+        }
 
 updateMultiQuery : MultiQueryMsg String -> QueryModel -> ( QueryModel, Cmd (MultiQueryMsg String) )
 updateMultiQuery msg model =

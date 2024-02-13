@@ -1,9 +1,6 @@
 module TeachingMaterial exposing (
     TeachingResource, Difficulty (..),
-    makeDummyResource, teachingResources,
-    difficultyToString)
-
-import TeachingMaterialData exposing (teachingMaterialString)
+    makeDummyResource, difficultyToString, parseTeachingResources)
 
 import Csv.Decode as Decode exposing (Decoder)
 import String exposing (split, trim)
@@ -95,8 +92,8 @@ decodeTeachingResource =
             |> Decode.pipeline (Decode.field "Link" Decode.string)
             |> Decode.pipeline (Decode.field "Citation" Decode.string)
 
-teachingResources : List TeachingResource
-teachingResources =
+parseTeachingResources : String -> List TeachingResource
+parseTeachingResources teachingMaterialString =
     case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
         Err x -> -- for debugging of .tsv file and parsing
                  --let _ = Debug.log "Parsing error" (Decode.errorToString x)
