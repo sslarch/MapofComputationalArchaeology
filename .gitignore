@@ -4,7 +4,6 @@ elm-stuff
 repl-temp-*
 
 # rendered, intermediate data products
-src/MapOfComputionalArchaeology.elm
 src/TeachingMaterialData.elm
 src/TeachingMaterialEdges.elm
 elm.js

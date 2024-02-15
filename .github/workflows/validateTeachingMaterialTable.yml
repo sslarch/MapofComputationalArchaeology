@@ -1,0 +1,25 @@
+name: validate data/teachingmaterial.tsv
+
+# Trigger the workflow on push or pull request, but only for the main branch
+on:
+  pull_request:
+  push:
+    branches: [main]
+
+jobs:
+  validate:
+    name: validate file
+    runs-on: ubuntu-latest
+    steps:
+        
+    - name: Clone repo
+      uses: actions/checkout@v3
+
+    - name: Install elm and elm-test-rs as defined in elm-tooling.json
+      uses: mpizenberg/elm-tooling-action@v1.6
+
+    - name: Create module TeachingMaterialData with teachingMaterialString
+      run: ./script_teachingmaterial_tsv2elm.sh
+
+    - name: Try parsing teachingMaterialString by running the pseudo-test
+      run: elm-test-rs

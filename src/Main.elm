@@ -3,8 +3,7 @@ module Main exposing (..)
 import MapOfComputionalArchaeology exposing (comparchmap)
 import TeachingMaterial exposing (
     TeachingResource, Difficulty (..),
-    makeDummyResource, teachingResources,
-    difficultyToString)
+    makeDummyResource, difficultyToString, parseTeachingResources)
 
 import Bootstrap.Alert as Alert
 import Bootstrap.Button as Button
@@ -16,6 +15,7 @@ import Bootstrap.Modal as Modal
 import Bootstrap.Utilities.Spacing as Spacing
 import Browser
 import Browser.Events as E
+import Browser.Navigation as Navigation
 import Chart as C
 import Chart.Attributes as CA
 import Chart.Events as CE
@@ -27,6 +27,7 @@ import FontAwesome.Styles as Icon
 import Html as H exposing (Html, a, br, button, div, h1, input, p, span, text)
 import Html.Attributes as HA exposing (href, placeholder, style)
 import Html.Events as HE exposing (onInput)
+import Http as Http
 import List exposing (map, concat, sort, any, member)
 import Maybe.Extra exposing (values)
 import Select as Select
@@ -77,6 +78,9 @@ type alias Model = {
     , selectedElement           : Maybe TeachingResource
     -- welcome
     , welcomeVisibility         : Modal.Visibility
+    -- error
+    , errorVisibility           : Modal.Visibility
+    , errorMessage              : String
     }
 
 type alias QueryModel =
@@ -102,15 +106,15 @@ type Dragging =
 -- INIT
 
 init : Int -> List TeachingResource -> ( Model, Cmd Msg )
-init wW elements =
+init wW resources =
     let model = { windowWidth = wW
                 -- table and data
-                , elements = teachingResources
+                , elements = resources
                 , tableState = Table.sortBy "ID" True
                 , multiQueryContent = [ ]
                 , multiQuery = {
                     id = "exampleMulti"
-                  , available = (map .tags teachingResources |> concat) ++ (map .programmingLanguage teachingResources |> concat) |> sort
+                  , available = (map .tags resources |> concat) ++ (map .programmingLanguage resources |> concat) |> sort
                   , itemToLabel = identity
                   , selected = [ ]
                   , selectState = Select.init ""
@@ -138,6 +142,9 @@ init wW elements =
                 , selectedElement = Nothing
                 -- welcome
                 , welcomeVisibility = Modal.shown
+                -- error
+                , errorVisibility = Modal.hidden
+                , errorMessage    = ""
                 }
     in ( model, Cmd.none )
 
@@ -154,6 +161,9 @@ filter minChars toLabel query items =
 
 type Msg =
       SetWindowWidth Int
+    -- download data
+    | SendHttpRequest
+    | DataReceived (Result Http.Error String)
     -- table and data
     | SetMultiQuery (MultiQueryMsg String)
     | ButtonAddToQuery String
@@ -173,12 +183,23 @@ type Msg =
     | ShowModal (Maybe TeachingResource)
     -- welcome
     | CloseWelcome
+    -- error
+    | CloseError
+    | ShowError String
 
 update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         SetWindowWidth w ->
             ({ model | windowWidth = w }, Cmd.none)
+        -- download data
+        SendHttpRequest -> ( model, getTeachingResources )
+        DataReceived res -> case res of
+            Err e -> update (ShowError "Failed to download data from GitHub.") model
+            Ok  x ->
+                case parseTeachingResources x of
+                    Err e -> update (ShowError ("Can't parse data. " ++ e)) model
+                    Ok  y -> ({ model | elements = y }, Cmd.none)
         -- map
         OnMouseClick closestPoint ->
             case (List.head (filterClosestPointToRealEntries closestPoint)) of
@@ -252,7 +273,20 @@ update msg model =
             ({ model | modalVisibility = Modal.shown, selectedElement = element } , Cmd.none)
         -- welcome
         CloseWelcome ->
-            ({ model | welcomeVisibility = Modal.hidden } , Cmd.none)
+            ({ model | welcomeVisibility = Modal.hidden }, getTeachingResources)
+        -- error
+        CloseError ->
+            ({ model | errorVisibility = Modal.hidden }, Navigation.reload)
+        ShowError e ->
+            ({ model | errorVisibility = Modal.shown, errorMessage = e }, Cmd.none)
+
+getTeachingResources : Cmd Msg
+getTeachingResources =
+    Http.get {
+          url = "https://raw.githubusercontent.com/sslarch/MapofComputationalArchaeology/main/data/teachingmaterial.tsv"
+          --url = "https://raw.githubusercontent.com/poseidon-framework/community-archive/07879ea4828b8e6d3b39cfbbf5bd51f6133a971f/2019_Jeong_InnerEurasia/POSEIDON.yml"
+        , expect = Http.expectString DataReceived
+        }
 
 updateMultiQuery : MultiQueryMsg String -> QueryModel -> ( QueryModel, Cmd (MultiQueryMsg String) )
 updateMultiQuery msg model =
@@ -306,7 +340,9 @@ view devel
         closestPoint,
         modalVisibility,
         selectedElement,
-        welcomeVisibility
+        welcomeVisibility,
+        errorVisibility,
+        errorMessage
     } =
     let
         -- general helper functions and settings
@@ -676,9 +712,26 @@ view devel
                                 text "Made by the "
                               , a [ href "https://sslarch.github.io" ] [ text "SIG for Scripting languages in Archaeology" ]
                               , text " - see the code on "
-                              , a [ href "https://github.com/sslarch/MapofComputationalArchaeology" ] [ text "Github" ]
+                              , a [ href "https://github.com/sslarch/MapofComputationalArchaeology" ] [ text "GitHub" ]
                               ] ]
                 |> Modal.view welcomeVisibility
+
+        -- error
+        detailsError =
+            Modal.config CloseError
+                |> Modal.large
+                |> Modal.hideOnBackdropClick False
+                |> Modal.scrollableBody True
+                |> Modal.h3 [] [ text "Error" ]
+                |> Modal.body [] [
+                    p [] [ H.pre [] [text errorMessage] ],
+                    p [] [
+                      text "Please report this error on "
+                    , a [ href "https://github.com/sslarch/MapofComputationalArchaeology" ] [ text "GitHub" ]
+                    , text "."
+                    ]
+                ]
+                |> Modal.view errorVisibility
 
     in
         -- main layout
@@ -743,7 +796,7 @@ view devel
                         ]
                     ]
                 ])
-            , detailsModal, detailsWelcome
+            , detailsModal, detailsWelcome, detailsError
             ]
 
 filterClosestPointToRealEntries : List (CI.One TeachingResource CI.Dot) -> List (CI.One TeachingResource CI.Dot)
