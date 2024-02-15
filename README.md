@@ -2,7 +2,7 @@
 
 This repo stores code and data for a small web app to list teaching material in the field of Computational Archaeology: https://sslarch.github.io/MapofComputationalArchaeology
 
-The teaching material table is stored in `data/teachingmaterial.tsv` and the web app queries it directly from the master branch on GitHub. **To add new material or modify the existing entries, just edit this file and submit a pull request with your changes.** The file will then be structurally validated by a GitHub action and can be merged if it is sound.
+The teaching material table is stored in `data/teachingmaterial.tsv` and the web app queries it directly from the main branch on GitHub. **To add new material or modify the existing entries, just edit this file and submit a pull request with your changes.** The file will then be structurally validated by a GitHub action and can be merged if it is sound.
 
 ## Developer notes
 
