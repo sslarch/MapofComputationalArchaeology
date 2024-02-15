@@ -13,7 +13,7 @@ jobs:
     steps:
         
     - name: Clone repo
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4
 
     - name: Install elm and elm-test-rs as defined in elm-tooling.json
       uses: mpizenberg/elm-tooling-action@v1.6
