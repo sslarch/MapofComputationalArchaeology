@@ -1,0 +1,900 @@
+-   ID: SIG-T0001
+    Source: ""
+    X_map: 81
+    Y_map: 50
+    Name: 'Tidyverse for archaeologists'
+    Author: 'Ben Marwick'
+    Year: '2020'
+    Topic: 'introduction to the tidyverse of R'
+    Language: en
+    Programming_language: Rstats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Slide deck with an introduction to the tidyverse, example code and tasks.'
+    Material_type: slides
+    Tags: 'tidyverse, data import, data wrangling, visualisation, programming'
+    Tags_openarchaeo: 'Educational resources and practical guides'
+    Link: 'https://benmarwick.github.io/tidyverse-for-archaeology/tidyverse-for-archaeology.html#1'
+    Citation: ""
+-   ID: SIG-T0002
+    Source: ""
+    X_map: 79
+    Y_map: 40
+    Name: 'Skriptsammlung Statistik für die Archäologie'
+    Author: 'Sophie Schmidt'
+    Year: '2020'
+    Topic: 'basic R introduction, plotting, statistical tests'
+    Language: de
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Scripts in md format including code and example tasks.'
+    Material_type: tutorial
+    Tags: 'data import, data wrangling, statistical tests, visualisation'
+    Tags_openarchaeo: 'Educational resources and practical guides, Data management'
+    Link: 'https://scschmidt.github.io/lehre/'
+    Citation: ""
+-   ID: SIG-T0003
+    Source: ""
+    X_map: 93
+    Y_map: 70
+    Name: 'The Open Digital Archaeology Textbook'
+    Author: 'Shawn Graham, Neha Gupta, Jolene Smith, Andreas Angourakis, Andrew Reinhard, Kate Ellenberger, Zack Batist, Joel Rivard, Ben Marwick, Michael Carter, Beth Compton, Rob Blades, Cristina Wood, Gary Nobles'
+    Year: '2018'
+    Topic: 'introduction to various digital archaeology practices, including project management, database management, data cleaning, visualization, photogrammetry, 3D printing, NLP, among other things'
+    Language: en
+    Programming_language: RStats
+    Tools: 'Open Refine, GitHub, Meshlab, Excel, Jupyter'
+    Level_of_difficulty: beginner
+    Description: 'An overview of various tools, methods and workflows commonly applied in digital archaeology, including practical examples demonstrated through well-documented jupyter notebooks.'
+    Material_type: textbook
+    Tags: 'data management, 3D methods, visualisation, spatial statistics, data wrangling, LOD'
+    Tags_openarchaeo: ""
+    Link: 'https://o-date.github.io/draft/book/'
+    Citation: ""
+-   ID: SIG-T0004
+    Source: ""
+    X_map: 171
+    Y_map: 35
+    Name: '3DHOP integration'
+    Author: 'Thomas Huet'
+    Year: '2021'
+    Topic: Web3d
+    Language: fr
+    Programming_language: 'RStats, JavaScript, HTML5'
+    Tools: 'RStudio, GitHub, 3DHOP, Blender, Meshlab, Meshroom'
+    Level_of_difficulty: intermediate
+    Description: 'A multi-paradigm approach (cartography, web3D, etc.) and multi-scalar presentation (macro, meso, micro) of portable tools and ancient iconography with open-source softwares (GitHub, 3DHOP, Blender, R, JavaScript, etc.) for data management within the frame of Linked-Open data (LOD).'
+    Material_type: tutorial
+    Tags: '3D methods, data management, archiving, LOD'
+    Tags_openarchaeo: 'Educational resources and practical guides, 3D modelling, '
+    Link: 'https://zoometh.github.io/reveal.js/#/5'
+    Citation: ""
+-   ID: SIG-T0005
+    Source: ""
+    X_map: 45
+    Y_map: 75
+    Name: 'Developing R Packages'
+    Author: 'Sophie Schmidt, Petr Pajdla, Clemens Schmid'
+    Year: '2021'
+    Topic: 'R package development'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: advanced
+    Description: 'Slides and exercises introducing R package development for participants with some scripting experience.'
+    Material_type: 'slides, exercises'
+    Tags: 'programming, reproducibility'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/sslarch/caa2021_Rpackage_workshop/'
+    Citation: ""
+-   ID: SIG-T0006
+    Source: ""
+    X_map: 61
+    Y_map: 51
+    Name: Rchaeology.eu
+    Author: 'Georg Roth'
+    Year: 'until 2012'
+    Topic: 'statistical analysis'
+    Language: de
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'A collection of blog posts about various quantitative data analysis applications relevant for archaeology.'
+    Material_type: blog
+    Tags: 'data analysis, clustering, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'http://www.rchaeology.eu/'
+    Citation: ""
+-   ID: SIG-T0007
+    Source: ""
+    X_map: 46
+    Y_map: 7
+    Name: 'LaTeX for thesis writing'
+    Author: 'Sarah Lang'
+    Year: '2021'
+    Topic: 'latex, writing'
+    Language: en
+    Programming_language: latex
+    Tools: 'text editors, Zotero'
+    Level_of_difficulty: intermediate
+    Description: "Overview of Latex's capabilities that support thesis writing."
+    Material_type: blog
+    Tags: 'markup languages, writing'
+    Tags_openarchaeo: ""
+    Link: 'https://latex-ninja.com/2021/06/13/latex-for-thesis-writing/'
+    Citation: ""
+-   ID: SIG-T0008
+    Source: ""
+    X_map: 16
+    Y_map: 13
+    Name: 'LaTeX for Archaeologists: An archaeological catalogue using LaTeX'
+    Author: 'Sarah Lang'
+    Year: '2021'
+    Topic: 'latex, layout, writing'
+    Language: en
+    Programming_language: latex
+    Tools: 'text editors'
+    Level_of_difficulty: intermediate
+    Description: 'Guide to using latex to create efficient and good-looking archaeological catalogues.'
+    Material_type: blog
+    Tags: 'markup languages, writing'
+    Tags_openarchaeo: ""
+    Link: 'https://latex-ninja.com/2020/05/04/latex-for-archaeologists-an-archaeological-catalogue-using-latex/'
+    Citation: ""
+-   ID: SIG-T0009
+    Source: ""
+    X_map: 33
+    Y_map: 15
+    Name: 'Quick guide to scholarly writing in Markdown with Atom'
+    Author: 'Ben Marwick'
+    Year: '2019'
+    Topic: 'writing, digital workflows'
+    Language: en
+    Programming_language: 'RStats, Markdown'
+    Tools: 'RStudio, Atom, pandoc, Zotero, git'
+    Level_of_difficulty: beginner
+    Description: 'Guide to scholarly writing using plaintext.'
+    Material_type: tutorial
+    Tags: 'markup languages, writing'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/benmarwick/atom-for-scholarly-writing-with-markdown'
+    Citation: ""
+-   ID: SIG-T0010
+    Source: ""
+    X_map: 74
+    Y_map: 70
+    Name: 'Learning to program: Debugging – Where to start?'
+    Author: 'Sarah Lang'
+    Year: '2021'
+    Topic: 'debugging software'
+    Language: en
+    Programming_language: 'LaTeX, RStats, Python'
+    Tools: 'text editors'
+    Level_of_difficulty: beginner
+    Description: 'Guide to finding and solving errors in the code.'
+    Material_type: blog
+    Tags: 'programming, writing'
+    Tags_openarchaeo: ""
+    Link: 'https://latex-ninja.com/2021/05/30/learning-to-program-debugging-where-to-start/'
+    Citation: ""
+-   ID: SIG-T0011
+    Source: ""
+    X_map: 100
+    Y_map: 37
+    Name: 'How to maintain Twitter with little effort as an academic'
+    Author: 'Sarah Lang'
+    Year: '2021'
+    Topic: 'twitter, academic communications'
+    Language: en
+    Programming_language: ""
+    Tools: twitter
+    Level_of_difficulty: beginner
+    Description: 'Guide for effective professional and institutional use of twitter'
+    Material_type: blog
+    Tags: 'social media, engagement'
+    Tags_openarchaeo: ""
+    Link: 'https://latex-ninja.com/2021/11/16/how-to-maintain-twitter-with-little-effort-as-an-academic-the-ninjas-how-to-better-promote-your-content-on-twitter-guide-part-5/'
+    Citation: ""
+-   ID: SIG-T0012
+    Source: ""
+    X_map: 45
+    Y_map: 24
+    Name: 'Digitizing journal articles and grey literature reports'
+    Author: ADS
+    Year: ongoing
+    Topic: 'digital curation, archiving and preservation'
+    Language: en
+    Programming_language: ""
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'Explains how to digitise journal articles or grey literature reports with a view to their long term sustainability'
+    Material_type: tutorial
+    Tags: 'digitalization, archiving, writing'
+    Tags_openarchaeo: ""
+    Link: 'https://archaeologydataservice.ac.uk/advice/scanningGuide.xhtml'
+    Citation: ""
+-   ID: SIG-T0013
+    Source: ""
+    X_map: 24
+    Y_map: 25
+    Name: 'Guides to Good Practice'
+    Author: ADS
+    Year: ongoing
+    Topic: 'digital curation, archiving and preservation'
+    Language: en
+    Programming_language: ""
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'Series of guides to various digital curation and preservation practices'
+    Material_type: tutorial
+    Tags: 'writing, archiving, project management, data management, archiving'
+    Tags_openarchaeo: ""
+    Link: 'https://guides.archaeologydataservice.ac.uk/g2gpwiki/'
+    Citation: ""
+-   ID: SIG-T0014
+    Source: ""
+    X_map: 67
+    Y_map: 14
+    Name: 'OntoMatchGame (formerly CIDOC-CRM Game)'
+    Author: 'Guillem Anais'
+    Year: '2024'
+    Topic: 'ontology learning game'
+    Language: en
+    Programming_language: ""
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'A fun way to visualize and play with ontology in relation to real world documentation scenarios. Available as both a physical tabletop card game, and in a rich virtual format too.'
+    Material_type: game
+    Tags: 'CIDOC CRM, ontology, archiving'
+    Tags_openarchaeo: ""
+    Link: 'https://ontomatchgame.huma-num.fr/'
+    Citation: 'https://cidoc-crm.org/Resources/onto-match-game'
+-   ID: SIG-T0015
+    Source: ""
+    X_map: 40
+    Y_map: 43
+    Name: 'Processing Radiocarbon Data with R'
+    Author: 'Clemens Schmid, Martin Hinz'
+    Year: '2018'
+    Topic: 'radiocarbon data'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'Instructional resources for processing radiocarbon data'
+    Material_type: tutorial
+    Tags: 'C14, bayes, calibration, dating'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/ISAAKiel/r_tutorial_caa_2018'
+    Citation: ""
+-   ID: SIG-T0016
+    Source: ""
+    X_map: 73
+    Y_map: 34
+    Name: 'Analyse und Visualisierung archäologischer Daten mit R'
+    Author: 'Dirk Seidensticker, Clemens Schmid'
+    Year: '2016'
+    Topic: visualisation
+    Language: de
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Instructional resources for data visualization'
+    Material_type: tutorial
+    Tags: 'data wrangling, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/ISAAKiel/R-Tutorial_CAA2016'
+    Citation: ""
+-   ID: SIG-T0017
+    Source: ""
+    X_map: 85
+    Y_map: 82
+    Name: 'Mosaic Summer School 2016'
+    Author: 'Franziska Faupel, Daniel Knitter'
+    Year: '2016'
+    Topic: 'spatial statistics'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'Reconstructing and modeling spheres of interaction.'
+    Material_type: workshop
+    Tags: 'data wrangling, spatial statistics, network analysis, point pattern analysis, R as GIS'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/ISAAKiel/Mosaic'
+    Citation: ""
+-   ID: SIG-T0018
+    Source: ""
+    X_map: 72
+    Y_map: 45
+    Name: 'Statistical Methods for Archaeological Data Analysis (Hinz)'
+    Author: 'Martin Hinz'
+    Year: '2021'
+    Topic: 'basic statistics'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Course, intro into R, Descriptive stats, NHST, Explorative statistics.'
+    Material_type: textbook
+    Tags: 'basic statistics, data import, data wrangling, NHST, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'https://martinhinz.github.io/smada2021'
+    Citation: ""
+-   ID: SIG-T0019
+    Source: ""
+    X_map: 80
+    Y_map: 90
+    Name: 'Predictive Mapping in R'
+    Author: 'Martin Hinz'
+    Year: '2019'
+    Topic: 'predictive mapping'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'Tutorial Workshop given at the International Colloquium on Digital Archaeology in Bern.'
+    Material_type: 'slides, workshop'
+    Tags: 'spatial statistics, R as GIS'
+    Tags_openarchaeo: ""
+    Link: 'https://martinhinz.github.io/pred_map_tut'
+    Citation: ""
+-   ID: SIG-T0020
+    Source: ""
+    X_map: 57
+    Y_map: 33
+    Name: 'Video tutorials about R for archaeologists'
+    Author: 'Martin Hinz'
+    Year: '2012-2019'
+    Topic: 'basic statistics'
+    Language: 'en, de'
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Collected works from different courses.'
+    Material_type: 'videos, workshop'
+    Tags: 'basic statistics, data import, data wrangling, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'http://vitutr.archaeological.science/'
+    Citation: ""
+-   ID: SIG-T0021
+    Source: ""
+    X_map: 64
+    Y_map: 54
+    Name: 'How To Do Archaeological Science Using R'
+    Author: 'Ben Marwick'
+    Year: '2017'
+    Topic: 'statistical analysis, agent-based modelling, radiocarbon analysis, geospatial analysis'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'This website is a early draft of an edited volume of contributions to the ‘How To Do Archaeological Science Using R’ forum.'
+    Material_type: textbook
+    Tags: 'spatial statistics, ABM, C14, Bayes, R as GIS, predictive modelling'
+    Tags_openarchaeo: ""
+    Link: 'https://benmarwick.github.io/How-To-Do-Archaeological-Science-Using-R/'
+    Citation: ""
+-   ID: SIG-T0022
+    Source: ""
+    X_map: 60
+    Y_map: 85
+    Name: 'Tutorial on Classification in Archaeology: Distance Matrices, Clustering Methods and Validation'
+    Author: 'Sophie Schmidt, Sarah Martini, Robert Staniuk, Carole Quatrelive, Martin Hinz, Oliver Nakoinz, Michael Bilger, Romy Plath, Georg Roth, Julian Laabs'
+    Year: '2022'
+    Topic: 'classification and clustering methods'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'The tutorial offers an introduction into classification in general, distance measures for data on all levels of measurement, hierarchical clustering with different linking methods, k-means clustering, hdbscan clustering and the silhouette validation method. All examples are developed using real life archaeological data from the archdata package. The tutorial aims at archaeologists  familiar with the scripting language R, but can be also gainfully read by those who wish to apply the methods in another software.'
+    Material_type: textbook
+    Tags: 'clustering, data import, data wrangling, multivariate statistics'
+    Tags_openarchaeo: ""
+    Link: 'https://doi.org/10.5281/zenodo.6325372'
+    Citation: 'Schmidt, Sophie C., Martini, Sarah, Staniuk, Robert, Quatrelivre, Carole, Hinz, Martin, Nakoinz, Oliver, Bilger, Michael, Roth, Georg, & Laabs, Julian. (2022, March 3). Tutorial on Classification in Archaeology: Distance Matrices, Clustering Methods and Validation. Zenodo. https://doi.org/10.5281/zenodo.6325372'
+-   ID: SIG-T0023
+    Source: ""
+    X_map: 119
+    Y_map: 68
+    Name: 'Computational Population Genetics'
+    Author: 'Stephan Schiffels'
+    Year: '2019'
+    Topic: 'basic population genetic analysis'
+    Language: en
+    Programming_language: 'bash, Python, RStats'
+    Tools: 'Jupyter Notebooks'
+    Level_of_difficulty: intermediate
+    Description: 'This repository contains several Jupyter Notebooks that I have used in the past for teaching various elements of population-genetic data analyses to students with no initial training in population genetics or Unix-based data analysis.'
+    Material_type: workshop
+    Tags: 'multivariate statistics, data analysis'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/Schiffels-Popgen/popgen_course'
+    Citation: ""
+-   ID: SIG-T0024
+    Source: ""
+    X_map: 114
+    Y_map: 61
+    Name: '2019 Workshop on Computational Population Genetics'
+    Author: 'Stephan Schiffels, Choongwon Jeong, Benjamin Peter'
+    Year: '2019'
+    Topic: 'basic and more advanced population genetics and archaeogenetics'
+    Language: en
+    Programming_language: 'bash, Python'
+    Tools: 'Jupyter Notebooks'
+    Level_of_difficulty: advanced
+    Description: 'An introduction to some of the most important archaeogenetic data/software/methods at the time'
+    Material_type: workshop
+    Tags: 'multivariate statistics, data analysis'
+    Tags_openarchaeo: ""
+    Link: 'https://comppopgenworkshop2019.readthedocs.io/en/latest/'
+    Citation: ""
+-   ID: SIG-T0025
+    Source: ""
+    X_map: 134
+    Y_map: 72
+    Name: 'A Step-by-Step Guide for Using Agent-Based Modeling in Archaeological Research'
+    Author: 'Iza Romanowska, Stefani Crabtree, Kathryn Harris, Benjamin Davies'
+    Year: '2019'
+    Topic: 'introduction to agent-based modeling with tutorials published as a special section in Advances in Archaeological Practice'
+    Language: en
+    Programming_language: NetLogo
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'Tutorials on how to build simple agent-based models for archaeology published as a special section in Advances in Archaeological Practice. Link leads to open preprint.'
+    Material_type: article
+    Tags: ABM
+    Tags_openarchaeo: ""
+    Link: 'https://www.researchgate.net/publication/333300954_Agent-Based_Modeling_for_Archaeologists_Part_1_of_3 '
+    Citation: 'Advances in Archaeological Practice , Volume 7 , Issue 2 , May 2019 , pp. 178 – 184. DOI: https://doi.org/10.1017/aap.2019.6'
+-   ID: SIG-T0026
+    Source: ""
+    X_map: 145
+    Y_map: 87
+    Name: 'Agent-Based Modeling for Archaeology – Simulating the Complexity of Societies'
+    Author: 'Iza Romanowska, Colin Wren, Stefani Crabtree'
+    Year: '2021'
+    Topic: 'introductory textbook on agent-based modeling'
+    Language: en
+    Programming_language: NetLogo
+    Tools: NetLogo
+    Level_of_difficulty: intermediate
+    Description: 'open-access textbook for agent-based modeling in archaeology with lots of tutorials and code examples'
+    Material_type: textbook
+    Tags: ABM
+    Tags_openarchaeo: ""
+    Link: 'https://santafeinstitute.github.io/ABMA/'
+    Citation: ""
+-   ID: SIG-T0027
+    Source: ""
+    X_map: 70
+    Y_map: 51
+    Name: 'Analyzing archaeological data in R (stat4arch)'
+    Author: 'Petr Pajdla, Peter Tkáč'
+    Year: '2020-2022'
+    Topic: 'slides, syllabus etc. for an uni course on introductory R in archaeology'
+    Language: 'en, cz, sk'
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Slides and syllabus for a uni course on R and more. Aiminng at promoting good practice regarding data management and reproducible workflows among the students.'
+    Material_type: slides
+    Tags: 'basic statistics, reproducibility, data management'
+    Tags_openarchaeo: ""
+    Link: 'https://petrpajdla.github.io/stat4arch/'
+    Citation: ""
+-   ID: SIG-T0028
+    Source: ""
+    X_map: 65
+    Y_map: 30
+    Name: 'CRAN Task View: Archaeological Science'
+    Author: 'Ben Marwick'
+    Year: ongoing
+    Topic: 'comprehensive list of R packages used in archaeology and list of articles, preferably with code and data included'
+    Language: en
+    Programming_language: RStats
+    Tools: ""
+    Level_of_difficulty: intermediate
+    Description: 'Includes list of R packages, articles and short introductory how-to guide for beginners.'
+    Material_type: 'resource list'
+    Tags: 'reproducibility, data management'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/benmarwick/ctv-archaeology'
+    Citation: ""
+-   ID: SIG-T0029
+    Source: ""
+    X_map: 35
+    Y_map: 31
+    Name: 'Data organization in spreadsheets'
+    Author: 'Karl Broman'
+    Year: '2017'
+    Topic: 'guide on how to organize your data in spreadsheets'
+    Language: en
+    Programming_language: ""
+    Tools: spreadsheets
+    Level_of_difficulty: beginner
+    Description: 'Guide with very basic information on how to organize data.'
+    Material_type: article
+    Tags: 'data management, archiving, spreadsheets'
+    Tags_openarchaeo: ""
+    Link: 'https://kbroman.org/dataorg/'
+    Citation: 'https://doi.org/10.1080/00031305.2017.1375989'
+-   ID: SIG-T0030
+    Source: ""
+    X_map: 180
+    Y_map: 47
+    Name: 'PyQGIS 101'
+    Author: 'Anita Graser'
+    Year: '2018'
+    Topic: 'PyQGIS introduction'
+    Language: en
+    Programming_language: Python
+    Tools: QGIS
+    Level_of_difficulty: beginner
+    Description: 'This tutorial aims to help GIS users to get started with Python programming for QGIS 3. In contrast to many tutorials out there, the idea is to not assume any previous programming knowledge.'
+    Material_type: tutorial
+    Tags: GIS
+    Tags_openarchaeo: ""
+    Link: 'https://anitagraser.com/pyqgis-101-introduction-to-qgis-python-programming-for-non-programmers/'
+    Citation: ""
+-   ID: SIG-T0031
+    Source: ""
+    X_map: 52
+    Y_map: 28
+    Name: 'Cow-culating your data with spreadsheets and R'
+    Author: 'Paulina F. Przystupa, L. Meghan Dennis'
+    Year: '2022'
+    Topic: 'basic data visualization using spreadsheets and R, how to explore bias in data, and creative ways to present data'
+    Language: en
+    Programming_language: RStats
+    Tools: 'spreadsheets, text editor'
+    Level_of_difficulty: beginner
+    Description: 'Tutorial about fundamental data processing and analysis practices'
+    Material_type: tutorial
+    Tags: 'data literacy, data stories, open data, public engagement, teaching '
+    Tags_openarchaeo: ""
+    Link: 'https://doi.org/10.6078/M7ZW1J2X'
+    Citation: 'Przystupa, Paulina F. and L. Meghan Dennis 2022 Cow-culating your data with spreadsheets and R. The Alexandria Archive Institute. DOI: https://doi.org/10.6078/M73N21HR'
+-   ID: SIG-T0032
+    Source: ""
+    X_map: 42
+    Y_map: 16
+    Name: 'Gabbing about Gabii: Going from Notes to Data to Narrative'
+    Author: 'L. Meghan Dennis, Paulina F. Przystupa'
+    Year: '2022'
+    Topic: 'turning site forms into usable and filterable tables; how to turn those data into narratives using different narrative lenses'
+    Language: en
+    Programming_language: ""
+    Tools: 'spreadsheets, text editor'
+    Level_of_difficulty: beginner
+    Description: 'Tutorial about digitizing and processing data from paper records'
+    Material_type: tutorial
+    Tags: 'data literacy, data stories, digital collections, narrative, open data, teaching'
+    Tags_openarchaeo: ""
+    Link: 'https://doi.org/10.6078/M76D5R3Q'
+    Citation: 'Dennis, L. Meghan and Paulina F. Przystupa 2022 Gabbing about Gabii: Going from Notes to Data to Narrative. The Alexandria Archive Institute. DOI: https://doi.org/10.6078/M7B27SF5'
+-   ID: SIG-T0033
+    Source: ""
+    X_map: 151
+    Y_map: 92
+    Name: 'RGBCatastrophe: A Netlogo tool for teaching, learning, and thinking about complexity'
+    Author: 'Andre Costopoulos'
+    Year: '2022'
+    Topic: ""
+    Language: en
+    Programming_language: NetLogo
+    Tools: NetLogo
+    Level_of_difficulty: beginner
+    Description: 'Helps students understand the basic insight that a single kind of cause can have a broad range of impacts, depending on the context in which it happens, and the related insight that simple interactions between a few elements can generate complex and unpredictable behaviour. It can help us understand how system state relates to consequences and how rapid and sudden change can take place.'
+    Material_type: demonstration
+    Tags: 'agent-based modelling, complexity'
+    Tags_openarchaeo: ""
+    Link: 'https://archeothoughts.wordpress.com/2022/05/30/rgbcatastrophe-a-netlogo-tool-for-teaching-learning-and-thinking-about-complexity/'
+    Citation: ""
+-   ID: SIG-T0034
+    Source: SIG-T0038
+    X_map: 75
+    Y_map: 55
+    Name: 'Introduction to R and the Tidyverse'
+    Author: 'Clemens Schmid'
+    Year: '2023'
+    Topic: 'data analysis with R and the tidyverse'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'A book chapter to follow along and learn about basic data analysis with R and the tidyverse.'
+    Material_type: tutorial
+    Tags: 'tidyverse, data import, data wrangling, visualisation, programming'
+    Tags_openarchaeo: ""
+    Link: 'https://www.spaam-community.org/intro-to-ancient-metagenomics-book/r-tidyverse.html'
+    Citation: ""
+-   ID: SIG-T0035
+    Source: ""
+    X_map: 177
+    Y_map: 60
+    Name: 'GIS in Archaeology'
+    Author: 'Joe Roe'
+    Year: '2022'
+    Topic: 'introduction to use of Geographic Information Systems (GIS) software in archaeology, including basic skills in cartography, geospatial data management, and spatial analysis.'
+    Language: en
+    Programming_language: ""
+    Tools: QGIS
+    Level_of_difficulty: beginner
+    Description: 'Online textbook for a course taught at the University of Bern. The course is designed to be delivered in in-person labs, but can probably be worked through independently as well.'
+    Material_type: textbook
+    Tags: 'gis, spatial analysis'
+    Tags_openarchaeo: ""
+    Link: 'https://gia.joeroe.io'
+    Citation: ""
+-   ID: SIG-T0036
+    Source: ""
+    X_map: 78
+    Y_map: 45
+    Name: 'Statistical Methods for Archaeological Data Analysis (Roe)'
+    Author: 'Joe Roe'
+    Year: '2023'
+    Topic: 'introduction to statistical analysis in archaeology using R.'
+    Language: en
+    Programming_language: RStats
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'Online textbook for a course taught at the University of Bern. The course is designed to be delivered in in-person labs, but can probably be worked through independently as well.'
+    Material_type: textbook
+    Tags: 'basic statistics, exploratory data analysis, tidyverse, data wrangling, visualisation, programming'
+    Tags_openarchaeo: ""
+    Link: 'https://smada.joeroe.io'
+    Citation: ""
+-   ID: SIG-T0037
+    Source: ""
+    X_map: 90
+    Y_map: 90
+    Name: 'Online Companion to Network Science in Archaeology'
+    Author: 'Matthew A. Peeples, Tom Brughmans'
+    Year: '2023'
+    Topic: 'a series of tutorials that outline methods for managing, analyzing, and visualizing network data, primarily using the R programming language'
+    Language: en
+    Programming_language: RStats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'The tutorials are designed to complement the text of the associated book (Brughmans and Peeples 2023) but can also stand alone as a guide to implementation of network analyses in R if you have a basic background in network methods and terminology. Although each section of this guide builds upon the previous sections in terms of network concepts and R methods, the sections are each independent in terms of data, examples, and code and can be run out of order if you choose.'
+    Material_type: tutorial
+    Tags: 'data wrangling, network analysis, multivariate statistics, spatial statistics'
+    Tags_openarchaeo: ""
+    Link: 'https://archnetworks.net/'
+    Citation: 'Peeples, Matthew A. and Tom Brughmans (2023). Online Companion to Network Science in Archaeology. https://archnetworks.net, Accessed 2023-03-21.'
+-   ID: SIG-T0038
+    Source: ""
+    X_map: 119
+    Y_map: 58
+    Name: 'Introduction to Ancient Metagenomics'
+    Author: 'James A. Fellows Yates, Christina Warinner, Alina Hiß, Arthur Kocher, Clemens Schmid, Irina Velsko, Maxime Borry, Megan Michel, Nikolay Oskolkov, Sebastian Duchene, Thiseas Lamnidis, Aida Andrades Valtueña, Alexander Herbig, Alexander Hübner, Kevin Nota, Robin Warner, Meriam Guellil'
+    Year: '2023'
+    Topic: 'introduction to various computational analysis in the field of ancient metagenomics'
+    Language: en
+    Programming_language: 'bash, RStats, Python'
+    Tools: ""
+    Level_of_difficulty: intermediate
+    Description: 'This book introduces the main steps of ancient metagenomic bioinformatic workflows, familiarising students with the command line, demonstrating how to process next-generation-sequencing (NGS) data, and showing how to perform de novo metagenomic assembly.'
+    Material_type: textbook
+    Tags: 'data analysis, pipelines'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/SPAAM-community/intro-to-ancient-metagenomics-book'
+    Citation: 'James A. Fellows Yates, Christina Warinner, Alina Hiß, Arthur Kocher, Clemens Schmid, Irina Velsko, Maxime Borry, Megan Michel, Nikolay Oskolkov, Sebastian Duchene, Thiseas Lamnidis, Aida Andrades Valtueña, Alexander Herbig, Alexander Hübner, Kevin Nota, Robin Warner, Meriam Guellil. (2023). Introduction to Ancient Metagenomics (Edition 2023). Zenodo. DOI: 10.5281/zenodo.8027281'
+-   ID: SIG-T0039
+    Source: SIG-T0038
+    X_map: 97
+    Y_map: 75
+    Name: 'Introduction to the Command Line'
+    Author: 'Thiseas C. Lamnidis, Aida Andrades Valtueña '
+    Year: '2023'
+    Topic: 'working on the linux command line'
+    Language: en
+    Programming_language: bash
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'A book chapter explaining how to navigate, run commands and program in the bash shell.'
+    Material_type: tutorial
+    Tags: programming
+    Tags_openarchaeo: ""
+    Link: 'https://www.spaam-community.org/intro-to-ancient-metagenomics-book/bare-bones-bash.html'
+    Citation: ""
+-   ID: SIG-T0041
+    Source: SIG-T0038
+    X_map: 156
+    Y_map: 87
+    Name: 'Introduction to Python and Pandas'
+    Author: 'Robin Warner, Kevin Nota, Maxime Borry '
+    Year: '2023'
+    Topic: 'data analysis with python and pandas'
+    Language: en
+    Programming_language: Python
+    Tools: 'Jupyter Notebooks'
+    Level_of_difficulty: beginner
+    Description: 'A book chapter introducing data analysis with Python using the Pandas library.'
+    Material_type: tutorial
+    Tags: 'data import, data wrangling, visualisation, programming'
+    Tags_openarchaeo: ""
+    Link: 'https://www.spaam-community.org/intro-to-ancient-metagenomics-book/python-pandas.html'
+    Citation: ""
+-   ID: SIG-T0042
+    Source: SIG-T0038
+    X_map: 90
+    Y_map: 31
+    Name: 'Introduction to Git(Hub)'
+    Author: 'Megan Michel, James Fellows Yates '
+    Year: '2023'
+    Topic: 'version control with Git and collaborative work on GitHub'
+    Language: en
+    Programming_language: ""
+    Tools: 'Git, GitHub'
+    Level_of_difficulty: beginner
+    Description: 'A book chapter to explain Git and GitHub with practical advice on how to set it up.'
+    Material_type: tutorial
+    Tags: 'data management, programming'
+    Tags_openarchaeo: ""
+    Link: 'https://www.spaam-community.org/intro-to-ancient-metagenomics-book/git-github.html'
+    Citation: ""
+-   ID: SIG-T0043
+    Source: ""
+    X_map: 50
+    Y_map: 35
+    Name: 'Data Analysis and Visualization in R for Archaologists'
+    Author: 'Alison Clarke, François Michonneau, Auriel Fournier'
+    Year: '2023'
+    Topic: 'basic R introduction, data analysis, data visualization'
+    Language: en
+    Programming_language: Rstats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'basic concepts, skills, and tools for working with data so that they can get more done in less time, and with less pain. These lessons were designed for those interested in working with archaeology data in R.'
+    Material_type: tutorial
+    Tags: 'data wrangling, visualisation, tidyverse'
+    Tags_openarchaeo: 'Educational resources and practical guides'
+    Link: 'https://carpentries-incubator.github.io/R-archaeology-lesson/'
+    Citation: ""
+-   ID: SIG-T0044
+    Source: ""
+    X_map: 169
+    Y_map: 63
+    Name: 'Tutorial for the archeoViz application (R package)'
+    Author: 'Sébastien Plutniak'
+    Year: '2023'
+    Topic: 'data analysis, data visualization'
+    Language: en
+    Programming_language: ""
+    Tools: archeoViz
+    Level_of_difficulty: beginner
+    Description: 'An introduction to the archeoViz application / R package for statistical and visual exploration of spatial data in archaeology.'
+    Material_type: tutorial
+    Tags: 'open data, visualisation, basic statistics, spatial analysis'
+    Tags_openarchaeo: ""
+    Link: 'https://archeoviz.hypotheses.org/1043'
+    Citation: 'Sébastien Plutniak. 2023. Tutorial for the archeoViz application (R package). archeoViz. Data visualization in archaeology. DOI: https://doi.org/10.58079/bd8'
+-   ID: SIG-T0045
+    Source: ""
+    X_map: 29
+    Y_map: 33
+    Name: 'Introduction to file formats and archeological data preparation, using the archeoViz application'
+    Author: 'Sébastien Plutniak'
+    Year: '2023'
+    Topic: 'tabular file formats and archeological data preparation'
+    Language: en
+    Programming_language: ""
+    Tools: archeoViz
+    Level_of_difficulty: beginner
+    Description: 'An introduction to file formats and archeological data preparation using the archeoViz application.'
+    Material_type: tutorial
+    Tags: 'data literacy, data management, spreadsheets, teaching'
+    Tags_openarchaeo: ""
+    Link: 'https://archeoviz.hypotheses.org/129'
+    Citation: 'Sébastien Plutniak. 2023. Introduction to File Formats and Archeological Data Preparation, using the archeoViz Application. archeoViz. Data visualization in archaeology. DOI: https://doi.org/10.58079/bd7i'
+-   ID: SIG-T0046
+    Source: ""
+    X_map: 54
+    Y_map: 22
+    Name: 'Introduction to archaeological data curation, description, and edition, using the archeoViz application'
+    Author: 'Sébastien Plutniak'
+    Year: '2023'
+    Topic: 'archaeological data curation, description, and edition'
+    Language: en
+    Programming_language: ""
+    Tools: archeoViz
+    Level_of_difficulty: intermediate
+    Description: 'An introduction to archaeological data curation, description, and edition, using the archeoViz application.'
+    Material_type: tutorial
+    Tags: 'open data, data management, basic statistics, teaching'
+    Tags_openarchaeo: ""
+    Link: 'https://archeoviz.hypotheses.org/158'
+    Citation: 'Sébastien Plutniak. 2023. Introduction to Archaeological Data Curation, Description, and Edition, using the archeoViz Application. archeoViz. Data visualization in archaeology. DOI: https://doi.org/10.58079/bd7j'
+-   ID: SIG-T0047
+    Source: ""
+    X_map: 68
+    Y_map: 62
+    Name: 'Introduction to the R programming language and reproducible science, using the archeoViz application'
+    Author: 'Sébastien Plutniak'
+    Year: '2023'
+    Topic: 'R programming language, reproducible science'
+    Language: en
+    Programming_language: Rstats
+    Tools: Rstudio
+    Level_of_difficulty: intermediate
+    Description: 'An introduction to the R programming language and the concepts of reproducible science, using the archeoViz application.'
+    Material_type: tutorial
+    Tags: 'programming, reproducibility, teaching'
+    Tags_openarchaeo: ""
+    Link: 'https://archeoviz.hypotheses.org/164'
+    Citation: 'Sébastien Plutniak. 2023. Introduction to the R Programming Language and Reproducible Science, using the archeoViz Application. archeoViz. Data visualization in archaeology. DOI: https://doi.org/10.58079/bd7k'
+-   ID: SIG-T0048
+    Source: ""
+    X_map: 173
+    Y_map: 65
+    Name: 'Tutorial: online visualization and graphic exports of archaeological spatial data, using the archeoViz application'
+    Author: 'Sébastien Plutniak'
+    Year: '2023'
+    Topic: 'online visualization and dissemination of archaeological spatial data'
+    Language: en
+    Programming_language: ""
+    Tools: archeoViz
+    Level_of_difficulty: beginner
+    Description: 'A tutorial about the online visualization and dissemination of archaeological spatial data, using the archeoViz application.'
+    Material_type: tutorial
+    Tags: 'visualisation, spatial analysis, teaching'
+    Tags_openarchaeo: ""
+    Link: 'https://archeoviz.hypotheses.org/178'
+    Citation: 'Sébastien Plutniak. 2023. Tutorial: Online Visualization and Graphic Exports of Archaeological Spatial Data, using the archeoViz Application. archeoViz. Data visualization in archaeology. DOI: https://doi.org/10.58079/bd7l'
+-   ID: 'SIG-T0049 '
+    Source: ""
+    X_map: 76
+    Y_map: 36
+    Name: 'Curso de introducción a R para arqueologos/as'
+    Author: 'María Coto Sarmiento'
+    Year: '2024'
+    Topic: 'R programming language'
+    Language: es
+    Programming_language: Rstats
+    Tools: ""
+    Level_of_difficulty: beginner
+    Description: 'A basic introduction to R.'
+    Material_type: tutorial
+    Tags: 'data wrangling, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'https://github.com/Mcotsar/Curso_Intro_R_Arqueologia'
+    Citation: ""
+-   ID: SIG-T0050
+    Source: ""
+    X_map: 43
+    Y_map: 34
+    Name: 'R and Statistics for Archaeologists'
+    Author: 'Bjørn Peare Bartholdy'
+    Year: '2024'
+    Topic: 'data analysis with R and the tidyverse'
+    Language: en
+    Programming_language: Rstats
+    Tools: RStudio
+    Level_of_difficulty: beginner
+    Description: 'Materials for an introduction course on R and data analysis with the tidyverse, using archaeological data.'
+    Material_type: tutorial
+    Tags: 'tidyverse, data import, data wrangling, visualisation, programming'
+    Tags_openarchaeo: ""
+    Link: 'https://rchaeology.github.io/RchaeoStats/'
+    Citation: 'https://github.com/rchaeology/RchaeoStats'
+-   ID: SIG-T0051
+    Source: ""
+    X_map: 69
+    Y_map: 56
+    Name: 'Archaeological Spatial Analysis in R'
+    Author: 'Michal Michalski'
+    Year: '2023'
+    Topic: 'spatial data analysis with R'
+    Language: en
+    Programming_language: Rstats
+    Tools: RStudio
+    Level_of_difficulty: intermediate
+    Description: 'A course to introduce students to spatial data processing, analysis and visualization using the R programming language.'
+    Material_type: tutorial
+    Tags: 'spatial statistics, GIS, programming, visualisation'
+    Tags_openarchaeo: ""
+    Link: 'https://topographos.github.io/asar/'
+    Citation: 'https://github.com/topographos/asar'

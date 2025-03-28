@@ -2,7 +2,7 @@ module TeachingMaterial exposing (
     TeachingResource, Difficulty (..),
     makeDummyResource, difficultyToString, parseTeachingResources)
 
-import Csv.Decode as Decode exposing (Decoder)
+import Yaml.Decode as Decode exposing (Decoder)
 import String exposing (split, trim)
 
 type alias TeachingResource =
@@ -72,28 +72,28 @@ decodeTeachingResource =
         decodeStringListLower = decodeStringList |> Decode.map (List.map String.toLower)
         decodeDifficulty = Decode.string |>
                            Decode.andThen (\value -> Decode.fromResult (difficultyFromString value))
-    in Decode.into TeachingResource
-            |> Decode.pipeline (Decode.field "ID" Decode.string)
-            |> Decode.pipeline (Decode.field "Source" decodeStringList)
-            |> Decode.pipeline (Decode.field "X_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Y_map" Decode.float)
-            |> Decode.pipeline (Decode.field "Name" Decode.string)
-            |> Decode.pipeline (Decode.field "Author" decodeStringList)
-            |> Decode.pipeline (Decode.field "Year" Decode.string)
-            |> Decode.pipeline (Decode.field "Topic" Decode.string)
-            |> Decode.pipeline (Decode.field "Language" Decode.string)
-            |> Decode.pipeline (Decode.field "Programming_language" decodeStringListLower)
-            |> Decode.pipeline (Decode.field "Tools" decodeStringList)
-            |> Decode.pipeline (Decode.field "Level_of_difficulty" decodeDifficulty)
-            |> Decode.pipeline (Decode.field "Description" Decode.string)
-            |> Decode.pipeline (Decode.field "Material_type" Decode.string)
-            |> Decode.pipeline (Decode.field "Tags" decodeStringListLower)
-            |> Decode.pipeline (Decode.field "Tags_openarchaeo" decodeStringList)
-            |> Decode.pipeline (Decode.field "Link" Decode.string)
-            |> Decode.pipeline (Decode.field "Citation" Decode.string)
+    in Decode.succeed TeachingResource
+            |> Decode.andMap (Decode.field "ID" Decode.string)
+            |> Decode.andMap (Decode.field "Source" decodeStringList)
+            |> Decode.andMap (Decode.field "X_map" Decode.float)
+            |> Decode.andMap (Decode.field "Y_map" Decode.float)
+            |> Decode.andMap (Decode.field "Name" Decode.string)
+            |> Decode.andMap (Decode.field "Author" decodeStringList)
+            |> Decode.andMap (Decode.field "Year" Decode.string)
+            |> Decode.andMap (Decode.field "Topic" Decode.string)
+            |> Decode.andMap (Decode.field "Language" Decode.string)
+            |> Decode.andMap (Decode.field "Programming_language" decodeStringListLower)
+            |> Decode.andMap (Decode.field "Tools" decodeStringList)
+            |> Decode.andMap (Decode.field "Level_of_difficulty" decodeDifficulty)
+            |> Decode.andMap (Decode.field "Description" Decode.string)
+            |> Decode.andMap (Decode.field "Material_type" Decode.string)
+            |> Decode.andMap (Decode.field "Tags" decodeStringListLower)
+            |> Decode.andMap (Decode.field "Tags_openarchaeo" decodeStringList)
+            |> Decode.andMap (Decode.field "Link" Decode.string)
+            |> Decode.andMap (Decode.field "Citation" Decode.string)
 
 parseTeachingResources : String -> Result String (List TeachingResource)
 parseTeachingResources teachingMaterialString =
-    case Decode.decodeCustom {fieldSeparator = '\t'} Decode.FieldNamesFromFirstRow decodeTeachingResource teachingMaterialString of
+    case Decode.fromString (Decode.list decodeTeachingResource) teachingMaterialString of
         Err e -> Err (Decode.errorToString e)
         Ok x ->  Ok x

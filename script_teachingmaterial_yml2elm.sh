@@ -1,7 +1,7 @@
 #!/bin/bash
 
-# teaching material tsv to elm code
-cp data/teachingmaterial.tsv src/TeachingMaterialData.elm
+# teaching material yml to elm code
+cp data/teachingmaterial.yml src/TeachingMaterialData.elm
 prepent1='module TeachingMaterialData exposing (teachingMaterialString)
 \n 
 \nteachingMaterialString : String

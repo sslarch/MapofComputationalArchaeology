@@ -1,4 +1,4 @@
-name: validate data/teachingmaterial.tsv
+name: validate data/teachingmaterial.yml
 
 # Trigger the workflow on push or pull request, but only for the main branch
 on:
@@ -19,7 +19,7 @@ jobs:
       uses: mpizenberg/elm-tooling-action@v1.6
 
     - name: Create module TeachingMaterialData with teachingMaterialString
-      run: ./script_teachingmaterial_tsv2elm.sh
+      run: ./script_teachingmaterial_yml2elm.sh
 
     - name: Try parsing teachingMaterialString by running the pseudo-test
       run: elm-test-rs

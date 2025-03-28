@@ -2,7 +2,7 @@
 
 This repo stores code and data for a small web app to list teaching material in the field of Computational Archaeology: https://sslarch.github.io/MapofComputationalArchaeology
 
-The teaching material table is stored in `data/teachingmaterial.tsv` and the web app queries it directly from the main branch on GitHub. **To add new material or modify the existing entries, just edit this file and submit a pull request with your changes.** The file will then be structurally validated by a GitHub action and can be merged if it is sound.
+The teaching material table is stored in `data/teachingmaterial.yml` and the web app queries it directly from the main branch on GitHub. **To add new material or modify the existing entries, just edit this file and submit a pull request with your changes.** The file will then be structurally validated by a GitHub action and can be merged if it is sound.
 
 ## Developer notes
 
@@ -12,15 +12,15 @@ This web app was written in [Elm](https://elm-lang.org). See the `src` directory
 
 To prepare the app for deployment on GitHub run `script_build_elmjs.sh`, which will transpile the Elm code in `src` to a single, large `.js` file, and then reduce its size with [uglifyjs](https://github.com/mishoo/UglifyJS) to produce the minified script `elm.min.js`. This file stores the entire app. The `index.html` file finally calls this script. This is what GitHub detects and shows as the website.
 
-### Validating `data/teachingmaterial.tsv`
+### Validating `data/teachingmaterial.yml`
 
-To allow for convenient, yet safe editing of the input data in `data/teachingmaterial.tsv` an automatic GitHub action workflow runs upon every push to the main branch. This workflow is specified in `.github/workflows/validateTeachingMaterialTable.yml` and involves the following main steps:
+To allow for convenient, yet safe editing of the input data in `data/teachingmaterial.yml` an automatic GitHub action workflow runs upon every push to the main branch. This workflow is specified in `.github/workflows/validateTeachingMaterialTable.yml` and involves the following main steps:
 
 1. The Elm compiler and the testing tool elm-test-rs are installed as specified in `elm-tooling.json`.
-2. The script `script_teachingmaterial_tsv2elm.sh` is run to create a module `src/TeachingMaterialData.elm` with a string-representation of the table.
+2. The script `script_teachingmaterial_yml2elm.sh` is run to create a module `src/TeachingMaterialData.elm` with a string-representation of the table.
 3. elm-test-rs triggers the pseudo-test in `tests/Tests.elm`, which runs the parsing code in `src/TeachingMaterial.elm` on the string-representation in `src/TeachingMaterialData.elm`.
 
-If the parsing fails in any way, then the GitHub action will fail, reporting the specific parsing issue. If it does not fail, then the new version of `data/teachingmaterial.tsv` can be read by the app and is safe to merge.
+If the parsing fails in any way, then the GitHub action will fail, reporting the specific parsing issue. If it does not fail, then the new version of `data/teachingmaterial.yml` can be read by the app and is safe to merge.
 
 ### Changing the fantasy map
 

@@ -283,8 +283,7 @@ update msg model =
 getTeachingResources : Cmd Msg
 getTeachingResources =
     Http.get {
-          url = "https://raw.githubusercontent.com/sslarch/MapofComputationalArchaeology/main/data/teachingmaterial.tsv"
-          --url = "https://raw.githubusercontent.com/poseidon-framework/community-archive/07879ea4828b8e6d3b39cfbbf5bd51f6133a971f/2019_Jeong_InnerEurasia/POSEIDON.yml"
+          url = "https://raw.githubusercontent.com/sslarch/MapofComputationalArchaeology/main/data/teachingmaterial.yml"
         , expect = Http.expectString DataReceived
         }
 
