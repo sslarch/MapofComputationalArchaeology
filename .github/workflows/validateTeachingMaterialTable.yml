@@ -16,7 +16,7 @@ jobs:
       uses: actions/checkout@v4
 
     - name: Install elm and elm-test-rs as defined in elm-tooling.json
-      uses: mpizenberg/elm-tooling-action@v1.6
+      uses: mpizenberg/elm-tooling-action@v1.7
 
     - name: Create module TeachingMaterialData with teachingMaterialString
       run: ./script_teachingmaterial_yml2elm.sh
