@@ -900,8 +900,8 @@
     Citation: 'https://github.com/topographos/asar'
 -   ID: SIG-T0052
     Source: ""
-    X_map: 69
-    Y_map: 56
+    X_map: 58
+    Y_map: 76
     Name: 'Visualisation of lead isotope data'
     Author: 'Yiu-Kang Hsu'
     Year: '2024'
